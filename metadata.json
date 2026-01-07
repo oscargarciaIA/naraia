@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.4.2",
-  "description": "Encoding Fix: Generación de infraestructura en UTF-8 puro sin BOM para compatibilidad total con Docker.",
-  "version": "1.4.2",
+  "name": "Nara - Asistente Virtual TI v1.4.3",
+  "description": "Robust-Path Edition: Corrección de rutas dinámicas y persistencia de variables para reconstrucción de infraestructura.",
+  "version": "1.4.3",
   "requestFramePermissions": []
 }

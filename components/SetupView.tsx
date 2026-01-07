@@ -18,19 +18,20 @@ const SetupView: React.FC = () => {
 
   const syncScripts = [
     {
-      name: "1. sincronizar_y_reparar_UTF8_NO_BOM.ps1",
-      icon: <RefreshCw size={18} className="text-emerald-500" />,
-      desc: "CORRECCIÓN CRÍTICA: Genera Dockerfile en UTF-8 puro (sin BOM) para eliminar el error 'unknown instruction §!!'.",
-      // CRITICAL FIX: Escaped ${ sequences using \${ to prevent JavaScript from attempting to interpolate
-      // PowerShell environment variable syntax as JS expressions.
-      code: `# repair_encoding_v142.ps1
-Write-Host "--- Nara AI v1.4.2: Reparación de Codificación Docker ---" -ForegroundColor Cyan
+      name: "1. Reparar_Infraestructura_Manual_v143.ps1",
+      icon: <Hammer size={18} className="text-orange-500" />,
+      desc: "FUERZA la creación manual de Dockerfile y Compose usando $PWD para evitar errores de 'Ruta Nula' y caracteres §!!.",
+      code: `# nara_robust_repair_v143.ps1
+Write-Host "--- Nara AI v1.4.3: Reparación Manual de Infraestructura ---" -ForegroundColor Cyan
 
-# 1. Rutas
-$dfPath = Join-Path $PSScriptRoot "Dockerfile"
-$dcPath = Join-Path $PSScriptRoot "docker-compose.yml"
+# 1. Definición de Rutas usando el directorio actual ($PWD)
+$currentDir = $PWD.Path
+$dfPath = [System.IO.Path]::Combine($currentDir, "Dockerfile")
+$dcPath = [System.IO.Path]::Combine($currentDir, "docker-compose.yml")
 
-# 2. Contenidos como Arreglos (Evita errores de comillas)
+Write-Host "Directorio de trabajo: $currentDir" -ForegroundColor Gray
+
+# 2. Contenidos del Dockerfile (Generación Manual)
 $dfLines = @(
     'FROM node:20-alpine',
     'WORKDIR /app',
@@ -41,6 +42,7 @@ $dfLines = @(
     'CMD ["npm", "run", "start"]'
 )
 
+# 3. Contenidos del docker-compose.yml (Generación Manual)
 $dcLines = @(
     "version: '3.8'",
     "services:",
@@ -73,32 +75,40 @@ $dcLines = @(
     "    driver: bridge"
 )
 
-# 3. Escritura Forzada UTF-8 sin BOM (La clave del éxito)
-Write-Host "[1/2] Recreando archivos con codificación pura..." -ForegroundColor Yellow
+# 4. Escritura Segura UTF-8 sin BOM (Elimina error §!!)
+Write-Host "[1/2] Generando archivos de infraestructura..." -ForegroundColor Yellow
 $utf8NoBOM = New-Object System.Text.UTF8Encoding($false)
 
-if (Test-Path $dfPath) { Remove-Item $dfPath -Force }
-if (Test-Path $dcPath) { Remove-Item $dcPath -Force }
+# Verificación de nulidad antes de escribir
+if (-not $dfPath -or -not $dcPath) {
+    Write-Error "Error: Las rutas de destino no se pudieron determinar."
+    return
+}
+
+if (Test-Path $dfPath) { Remove-Item $dfPath -Force -ErrorAction SilentlyContinue }
+if (Test-Path $dcPath) { Remove-Item $dcPath -Force -ErrorAction SilentlyContinue }
 
 [System.IO.File]::WriteAllLines($dfPath, $dfLines, $utf8NoBOM)
 [System.IO.File]::WriteAllLines($dcPath, $dcLines, $utf8NoBOM)
 
-Write-Host "✅ Dockerfile y Compose reparados (UTF-8 No-BOM)." -ForegroundColor Green
+Write-Host "✅ Archivos creados correctamente en: $currentDir" -ForegroundColor Green
 
-# 4. Despliegue Limpio
-Write-Host "[2/2] Reconstruyendo entorno..." -ForegroundColor Cyan
+# 5. Ejecución Docker
+Write-Host "[2/2] Reiniciando servicios..." -ForegroundColor Cyan
 docker-compose down
 docker-compose up -d --build
 
-Write-Host "--- SISTEMA RESTABLECIDO ---" -ForegroundColor Green`
+Write-Host "--- PROCESO FINALIZADO ---" -ForegroundColor Green`
     },
     {
-      name: "2. configurar_auth_pat.ps1",
-      icon: <KeyRound size={18} className="text-purple-500" />,
-      desc: "Vincula tu token de GitHub si necesitas descargar cambios de código.",
-      code: `$token = "TU_TOKEN_AQUI"
-git remote set-url origin "https://$($token)@github.com/oscargarciaIA/naraia.git"
-Write-Host "✅ Token vinculado." -ForegroundColor Green`
+      name: "2. Reset_Git_y_Limpieza.ps1",
+      icon: <RefreshCw size={18} className="text-blue-500" />,
+      desc: "Limpia conflictos de Git y archivos temporales antes de la reparación.",
+      code: `Write-Host "Limpiando repositorio..." -ForegroundColor Yellow
+git fetch origin
+git reset --hard origin/main
+git clean -fd
+Write-Host "✅ Repositorio sincronizado y limpio." -ForegroundColor Green`
     }
   ];
 
@@ -106,7 +116,7 @@ Write-Host "✅ Token vinculado." -ForegroundColor Green`
     <div className="flex h-full bg-[#f8fafc]">
       <div className="w-64 border-r border-slate-200 bg-white flex flex-col shrink-0">
         <div className="p-6">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Mantenimiento v1.4.2</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Mantenimiento v1.4.3</h3>
           <nav className="space-y-1">
             <button onClick={() => setActiveTab('git_sync')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === 'git_sync' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
               <Github size={16} /> Sync & Auto-Repair
@@ -123,19 +133,19 @@ Write-Host "✅ Token vinculado." -ForegroundColor Green`
           
           {activeTab === 'git_sync' && (
             <div className="space-y-6 animate-fade-in-up">
-              <header className="bg-emerald-950 p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+              <header className="bg-orange-950 p-8 rounded-3xl text-white shadow-xl relative overflow-hidden border-b-4 border-orange-500">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-2">
-                    <Zap className="text-emerald-400" size={24} />
-                    <h2 className="text-2xl font-bold">Fix de Codificación Docker</h2>
+                    <ShieldAlert className="text-orange-400" size={24} />
+                    <h2 className="text-2xl font-bold">Reparación Forzada Manual</h2>
                   </div>
-                  <p className="text-emerald-300 text-sm">Este script elimina los caracteres invisibles (BOM) que causan errores de 'unknown instruction' en Windows.</p>
+                  <p className="text-orange-200 text-sm italic">Solución definitiva para errores de 'Ruta Nula' y caracteres extraños en Docker.</p>
                 </div>
               </header>
 
               <div className="grid grid-cols-1 gap-6">
                 {syncScripts.map((script, idx) => (
-                  <div key={idx} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden border-l-4 border-l-emerald-500">
+                  <div key={idx} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden border-l-4 border-l-orange-500">
                     <div className="px-6 py-5 flex justify-between items-start">
                       <div className="flex gap-4">
                         <div className="mt-1">{script.icon}</div>
@@ -146,13 +156,13 @@ Write-Host "✅ Token vinculado." -ForegroundColor Green`
                       </div>
                       <button 
                         onClick={() => copyToClipboard(script.code, script.name)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${copied === script.name ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white hover:bg-black'}`}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${copied === script.name ? 'bg-orange-600 text-white' : 'bg-slate-900 text-white hover:bg-black'}`}
                       >
                         {copied === script.name ? <Check size={16}/> : 'Copiar Script'}
                       </button>
                     </div>
                     <div className="px-6 pb-6">
-                      <pre className="bg-slate-950 rounded-xl p-4 font-mono text-[10px] text-emerald-300 overflow-x-auto border border-slate-800">
+                      <pre className="bg-slate-950 rounded-xl p-4 font-mono text-[10px] text-orange-300 overflow-x-auto border border-slate-800">
                         {script.code}
                       </pre>
                     </div>
@@ -160,12 +170,12 @@ Write-Host "✅ Token vinculado." -ForegroundColor Green`
                 ))}
               </div>
 
-              <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl flex gap-4">
-                <Info className="text-blue-600 shrink-0" size={24} />
+              <div className="bg-orange-50 border border-orange-100 p-6 rounded-2xl flex gap-4">
+                <AlertCircle className="text-orange-600 shrink-0" size={24} />
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-blue-900">Solución al error §!!</h4>
-                  <p className="text-xs text-blue-800 leading-relaxed">
-                    El error que viste ocurre porque Windows agrega caracteres invisibles al inicio de los archivos. El nuevo script utiliza <strong>System.Text.UTF8Encoding($false)</strong> para asegurar que el Dockerfile sea 100% texto plano, como lo requiere Linux.
+                  <h4 className="text-sm font-bold text-orange-900">¿Por qué fallaba?</h4>
+                  <p className="text-xs text-orange-800 leading-relaxed">
+                    PowerShell no detecta la ruta del script si lo copias y pegas directamente en la ventana. La <strong>v1.4.3</strong> ahora usa <code>$currentDir = $PWD.Path</code>, lo cual detecta automáticamente la carpeta donde tienes abierta la terminal.
                   </p>
                 </div>
               </div>
@@ -176,7 +186,7 @@ Write-Host "✅ Token vinculado." -ForegroundColor Green`
             <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
                <div className="flex items-center gap-3 mb-6">
                  <FileCode className="text-indigo-600" size={24} />
-                 <h2 className="text-xl font-bold text-slate-800">Referencia de Dockerfile Puro</h2>
+                 <h2 className="text-xl font-bold text-slate-800">Referencia de Dockerfile (Generado)</h2>
                </div>
                <pre className="bg-slate-50 p-6 rounded-2xl font-mono text-xs text-slate-600 border border-slate-100">
 {`FROM node:20-alpine
