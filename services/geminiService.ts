@@ -1,7 +1,16 @@
-import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
-import { MockContextItem, NaraResponse, AgentConfig } from '../types';
+import { GoogleGenAI, Type } from "@google/genai";
+import { MockContextItem, NaraResponse } from '../types';
 
-// Datos simulados para RAG (Retrieval Augmented Generation)
+const NARA_SYSTEM_INSTRUCTION = `
+Eres Nara, el asistente oficial de cumplimiento y TI.
+Tu arquitectura está diseñada para responder basándote ÚNICAMENTE en fuentes oficiales.
+REGLAS CRÍTICAS:
+1. Si la información no está en el CONTEXTO, debes informar que no tienes registros oficiales y sugerir escalamiento.
+2. Mantén un tono técnico, preciso y profesional.
+3. Siempre incluye una nota de cumplimiento legal/normativo.
+4. Si el nivel de confianza en la respuesta es bajo (< 0.7), sugiere escalar a la mesa de ayuda.
+`;
+
 const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
   {
     doc_id: "POL-RW-2024",
@@ -21,93 +30,69 @@ const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
   }
 ];
 
-// Simula la búsqueda en una base de datos vectorial (pgvector)
-async function searchCorporateKnowledgeBase(query: string, agentConfig?: AgentConfig): Promise<MockContextItem[]> {
-  await new Promise(resolve => setTimeout(resolve, 600)); // Latencia de red simulada
-  return LOCAL_MOCK_CONTEXT;
+async function searchCorporateKnowledgeBase(query: string): Promise<MockContextItem[]> {
+  // Simulación de búsqueda semántica (En producción, esto consultaría la tabla knowledge.documents en Postgres)
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const q = query.toLowerCase();
+  return LOCAL_MOCK_CONTEXT.filter(item => 
+    q.includes("remoto") || q.includes("monitor") || q.includes("copilot") || q.includes("licencia")
+  );
 }
 
-const SYSTEM_INSTRUCTION = `
-Eres Nara, un asistente virtual de TI de nivel empresarial.
-OBJETIVO: Responder consultas sobre contratos, licencias y políticas de TI.
-
-REGLAS DE ORO:
-1. BASATE SOLO EN EL CONTEXTO_VECTORIAL PROPORCIONADO. No inventes información.
-2. Si la información no está en el contexto, indica explícitamente que no tienes datos sobre ese tema específico.
-3. Mantén un tono profesional, conciso y servicial.
-4. La salida debe ser estrictamente JSON válido según el esquema solicitado.
-
-ESQUEMA DE RESPUESTA (JSON):
-{
-  "respuesta_usuario": "string (Tu respuesta en lenguaje natural y amigable)",
-  "preguntas_aclaratorias": ["string"] (Opcional: preguntas para desambiguar),
-  "accion": "responder" | "escalar_mesa",
-  "nivel_confianza": number (0.0 a 1.0),
-  "fuentes": [{"doc_id": "string", "titulo": "string", "seccion_o_clausula": "string", "fecha_version": "string", "score": number}],
-  "nota_compliance": "string" (Breve nota si hay implicaciones de seguridad/compliance),
-  "escalamiento": {"metodo": null, "ticket_id": null, "mail_id": null, "resumen": null, "severidad": null}
-}
-`;
+const NARA_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    respuesta_usuario: { type: Type.STRING },
+    preguntas_aclaratorias: { type: Type.ARRAY, items: { type: Type.STRING } },
+    accion: { type: Type.STRING, enum: ["responder", "escalar_mesa", "escalar_mail"] },
+    nivel_confianza: { type: Type.NUMBER },
+    fuentes: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          doc_id: { type: Type.STRING },
+          titulo: { type: Type.STRING },
+          seccion_o_clausula: { type: Type.STRING },
+          score: { type: Type.NUMBER }
+        }
+      }
+    },
+    nota_compliance: { type: Type.STRING },
+    escalamiento: {
+      type: Type.OBJECT,
+      properties: {
+        metodo: { type: Type.STRING, nullable: true },
+        ticket_id: { type: Type.STRING, nullable: true },
+        severidad: { type: Type.STRING, nullable: true }
+      }
+    }
+  },
+  required: ["respuesta_usuario", "accion", "nivel_confianza", "fuentes", "nota_compliance", "escalamiento"]
+};
 
 export const sendMessageToNara = async (
   userQuestion: string,
-  history: { role: string; content: string }[],
-  agentConfig?: AgentConfig
+  history: { role: string; content: string }[]
 ): Promise<NaraResponse> => {
-  // Inicialización segura del cliente GenAI
-  // NOTA: La API Key se inyecta desde docker-compose.yml -> process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  // 1. Recuperación de contexto (RAG)
-  const retrievedContext = await searchCorporateKnowledgeBase(userQuestion, agentConfig);
-
-  // 2. Construcción del Prompt con Grounding
-  const promptPayload = `
-    PREGUNTA DEL USUARIO: ${userQuestion}
-    
-    CONTEXTO_VECTORIAL RECUPERADO (Base de Conocimiento Corporativa):
-    ${JSON.stringify(retrievedContext, null, 2)}
-  `;
+  const retrievedContext = await searchCorporateKnowledgeBase(userQuestion);
 
   try {
-    // 3. Configuración del Chat
-    const chat: Chat = ai.chats.create({
-      model: 'gemini-3-flash-preview', // Modelo optimizado para latencia y tareas de texto
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [{ role: 'user', parts: [{ text: `CONTEXTO:\n${JSON.stringify(retrievedContext)}\n\nPREGUNTA: ${userQuestion}` }] }],
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json", // Forzamos salida JSON estructurada
-        temperature: 0.2, // Baja temperatura para respuestas más deterministas y factuales
+        systemInstruction: NARA_SYSTEM_INSTRUCTION,
+        responseMimeType: "application/json",
+        responseSchema: NARA_SCHEMA,
+        temperature: 0, // Máxima precisión técnica
       },
     });
 
-    // 4. Generación de respuesta
-    const result: GenerateContentResponse = await chat.sendMessage({ message: promptPayload });
-
-    // 5. Procesamiento de respuesta
-    if (result.text) {
-      return JSON.parse(result.text) as NaraResponse;
-    } else {
-      throw new Error("Respuesta vacía del modelo");
-    }
-
+    return JSON.parse(response.text || '{}') as NaraResponse;
   } catch (error) {
-    console.error("Error en servicio Nara AI:", error);
-    
-    // Fallback seguro en caso de error
-    return {
-      respuesta_usuario: "Lo siento, estoy experimentando dificultades técnicas para consultar la base de conocimiento en este momento. Por favor, intenta de nuevo en unos segundos.",
-      preguntas_aclaratorias: [],
-      accion: "escalar_mesa",
-      nivel_confianza: 0,
-      fuentes: [],
-      nota_compliance: "Error de Sistema - Interrupción de Servicio",
-      escalamiento: { 
-        metodo: "mesa", 
-        ticket_id: null, 
-        mail_id: null, 
-        resumen: "Fallo en conexión API GenAI", 
-        severidad: "P3" 
-      }
-    };
+    console.error("Nara AI Core Error:", error);
+    throw error;
   }
 };
