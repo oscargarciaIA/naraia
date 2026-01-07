@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield, Database, Activity, Cpu, Server, Settings } from 'lucide-react';
+import { Shield, Database, Activity, Cpu, Server, Settings, Github, GitBranch } from 'lucide-react';
 import { AgentConfig } from '../types';
 
 interface SidebarProps { 
@@ -49,7 +49,19 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
               <Server size={12} className="mr-2"/> Infraestructura
             </h3>
             <div className="space-y-3">
-              <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+              <div className="bg-slate-800/30 p-3 rounded-xl border border-slate-700/50">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2 text-xs text-slate-300 font-medium">
+                    <Github size={14} className="text-slate-400" /> GitHub Sync
+                  </div>
+                  <span className="w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+                </div>
+                <div className="text-[9px] font-mono text-slate-500 flex items-center gap-1">
+                  <GitBranch size={10} /> main (origin/main)
+                </div>
+              </div>
+
+              <div className="bg-slate-800/30 p-3 rounded-xl border border-slate-700/50">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs text-slate-400">Database</span>
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
@@ -59,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+              <div className="bg-slate-800/30 p-3 rounded-xl border border-slate-700/50">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs text-slate-400">AI Engine</span>
                   <span className="text-[10px] text-indigo-400 font-bold">READY</span>

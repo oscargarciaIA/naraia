@@ -4,13 +4,13 @@ import { MockContextItem, NaraResponse } from '../types';
 
 const NARA_SYSTEM_INSTRUCTION = `
 Eres Nara, el asistente virtual oficial del área de TI de una multinacional líder. 
-Tu misión es resolver dudas sobre políticas internas, accesos, licenciamiento y soporte técnico.
 
 PROTOCOLO DE RESPUESTA:
-1. IDENTIDAD: Profesional, técnica y extremadamente servicial.
-2. FUENTES: Responde basándote exclusivamente en el CONTEXTO proporcionado. Si la información no existe allí, indica que no hay registros oficiales y ofrece escalar el caso.
-3. SEGURIDAD: Nunca reveles passwords o keys en texto plano.
-4. CUMPLIMIENTO: Cada respuesta debe finalizar con una breve nota sobre cumplimiento normativo (DLP, GDPR o ISO 27001).
+1. IDENTIDAD: Profesional, técnica y experta en DEVOPS y SOPORTE IT.
+2. REPOSITORIO: El hogar oficial de este proyecto es https://github.com/oscargarciaIA/naraia.git. 
+3. SOPORTE GITHUB: Si el usuario pregunta por el código o cómo colaborar, guíalo hacia el repositorio oficial y menciónale que los scripts de sincronización v1.2.9 ya están configurados para ese destino.
+4. FUENTES: Responde basándote exclusivamente en el CONTEXTO proporcionado.
+5. CUMPLIMIENTO: Cada respuesta debe finalizar con una breve nota sobre cumplimiento normativo (ISO 27001).
 `;
 
 const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
@@ -19,45 +19,33 @@ const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
     titulo: "Política Global de Trabajo Remoto",
     seccion_o_clausula: "3.2 Equipamiento IT",
     fecha_version: "2024-01-15",
-    texto: "La compañía proporcionará una (1) computadora portátil estándar corporativa. Los monitores externos no están incluidos por defecto y requieren aprobación de un gerente de línea.",
+    texto: "La compañía proporciona laptops corporativas. Monitores requieren aprobación.",
     score: 0.95
   },
   {
-    doc_id: "LIC-MS-365",
-    titulo: "Acuerdo Licenciamiento Microsoft",
-    seccion_o_clausula: "Anexo B - Copilot",
-    fecha_version: "2023-11-30",
-    texto: "Empleados administrativos tienen licencia E3. El uso de Microsoft 365 Copilot requiere una licencia 'Add-on' específica y aprobación del Director de TI debido a costos adicionales.",
-    score: 0.92
+    doc_id: "DEV-REPO-001",
+    titulo: "Repositorio Oficial Nara",
+    seccion_o_clausula: "1.0 GitHub",
+    fecha_version: "2024-04-10",
+    texto: "La URL oficial del proyecto es https://github.com/oscargarciaIA/naraia.git. Todo commit debe pasar por la GitHub Action de CI/CD configurada en .github/workflows/main.yml.",
+    score: 1.0
   }
 ];
 
 async function searchCorporateKnowledgeBase(query: string): Promise<MockContextItem[]> {
-  // Simulación de búsqueda semántica (Vector Search)
   await new Promise(resolve => setTimeout(resolve, 400));
   const q = query.toLowerCase();
   return LOCAL_MOCK_CONTEXT.filter(item => 
-    q.includes("remoto") || q.includes("monitor") || q.includes("copilot") || q.includes("licencia") || q.includes("laptop")
+    q.includes("remoto") || q.includes("monitor") || q.includes("github") || q.includes("sync") || q.includes("repo") || q.includes("naraia")
   );
 }
 
 const NARA_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    respuesta_usuario: { 
-      type: Type.STRING, 
-      description: "Respuesta final redactada para el empleado." 
-    },
-    preguntas_aclaratorias: { 
-      type: Type.ARRAY, 
-      items: { type: Type.STRING },
-      description: "Preguntas para guiar mejor al usuario si su duda es ambigua."
-    },
-    accion: { 
-      type: Type.STRING, 
-      enum: ["responder", "escalar_mesa", "escalar_mail"],
-      description: "Acción lógica recomendada."
-    },
+    respuesta_usuario: { type: Type.STRING },
+    preguntas_aclaratorias: { type: Type.ARRAY, items: { type: Type.STRING } },
+    accion: { type: Type.STRING, enum: ["responder", "escalar_mesa", "escalar_mail"] },
     nivel_confianza: { type: Type.NUMBER },
     fuentes: {
       type: Type.ARRAY,
@@ -88,7 +76,6 @@ export const sendMessageToNara = async (
   userQuestion: string,
   history: { role: string; content: string }[]
 ): Promise<NaraResponse> => {
-  // Fixed: Strict initialization of GoogleGenAI using process.env.API_KEY directly
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const retrievedContext = await searchCorporateKnowledgeBase(userQuestion);
 
@@ -97,7 +84,7 @@ export const sendMessageToNara = async (
       model: 'gemini-3-flash-preview',
       contents: [
         ...history.map(h => ({ role: h.role, parts: [{ text: h.content }] })),
-        { role: 'user', parts: [{ text: `CONTEXTO CORPORATIVO:\n${JSON.stringify(retrievedContext)}\n\nPREGUNTA DEL EMPLEADO: ${userQuestion}` }] }
+        { role: 'user', parts: [{ text: `CONTEXTO CORPORATIVO:\n${JSON.stringify(retrievedContext)}\n\nPREGUNTA: ${userQuestion}` }] }
       ],
       config: {
         systemInstruction: NARA_SYSTEM_INSTRUCTION,
@@ -106,11 +93,7 @@ export const sendMessageToNara = async (
         temperature: 0.1,
       },
     });
-
-    const text = response.text;
-    if (!text) throw new Error("Empty response from Nara Engine");
-    
-    return JSON.parse(text) as NaraResponse;
+    return JSON.parse(response.text) as NaraResponse;
   } catch (error) {
     console.error("Nara AI Core Critical Error:", error);
     throw error;

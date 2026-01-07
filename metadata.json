@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.2.6",
-  "description": "Solución al error de SyntaxError en JSON. Implementación de guardado sin BOM.",
-  "version": "1.2.6",
+  "name": "Nara - Asistente Virtual TI v1.2.9",
+  "description": "Edición DevOps vinculada al repositorio oficial naraia.",
+  "version": "1.2.9",
   "requestFramePermissions": []
 }
