@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { MockContextItem, NaraResponse } from '../types';
 
@@ -87,7 +88,8 @@ export const sendMessageToNara = async (
   userQuestion: string,
   history: { role: string; content: string }[]
 ): Promise<NaraResponse> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Fixed: Strict initialization of GoogleGenAI using process.env.API_KEY directly
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const retrievedContext = await searchCorporateKnowledgeBase(userQuestion);
 
   try {

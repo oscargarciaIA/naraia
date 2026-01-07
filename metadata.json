@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.2.2",
-  "description": "Interfaz de chat corporativa de Nara. Incluye comando 'One-Liner' para saltar bloqueos de creación de archivos en el despliegue Docker.",
-  "version": "1.2.2",
+  "name": "Nara - Asistente Virtual TI v1.2.3",
+  "description": "Solución técnica para el error de parseo de Dockerfile en Windows. Incluye inyección de scripts con codificación UTF-8 forzada.",
+  "version": "1.2.3",
   "requestFramePermissions": []
 }
