@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.3.9",
-  "description": "Sync Edition: Prioriza la descarga de cambios desde GitHub y elimina conflictos de ramas.",
-  "version": "1.3.9",
+  "name": "Nara - Asistente Virtual TI v1.4.2",
+  "description": "Encoding Fix: Generación de infraestructura en UTF-8 puro sin BOM para compatibilidad total con Docker.",
+  "version": "1.4.2",
   "requestFramePermissions": []
 }
