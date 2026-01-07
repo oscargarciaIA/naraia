@@ -1,101 +1,17 @@
 
 import React, { useState } from 'react';
-import { Copy, Check, Terminal, ShieldCheck, AlertTriangle, CheckCircle2, Github, GitMerge, FileCode, ExternalLink } from 'lucide-react';
+import { 
+  Copy, Check, Terminal, Database, Server, FileCode, Briefcase, 
+  FileText, CheckCircle2, ChevronRight, HardDrive, History, 
+  BookOpen, ShieldCheck, List, LayoutGrid, ArrowRight, ShieldAlert,
+  Settings2, Layers, Cpu, Github, Monitor, Code2, Globe
+} from 'lucide-react';
+
+type DocCategory = 'roadmap' | 'database' | 'infrastructure' | 'maintenance' | 'manuals';
 
 const SetupView: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<DocCategory>('roadmap');
   const [copied, setCopied] = useState<string | null>(null);
-  const REPO_URL = "https://github.com/oscargarciaIA/naraia.git";
-
-  // Archivos de Configuración Git/GitHub
-  const gitIgnore = `node_modules
-dist
-.env
-.DS_Store
-*.local
-docker-compose.override.yml`;
-
-  const githubAction = `name: Nara CI/CD
-on:
-  push:
-    branches: [ main ]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build Docker Image
-        run: docker build -t nara-assistant:latest .`;
-
-  // Archivos Base (v1.2.9)
-  const pkgJson = `{
-  "name": "nara-virtual-assistant",
-  "version": "1.2.9",
-  "type": "module",
-  "scripts": {
-    "start": "vite --host 0.0.0.0 --port 3000",
-    "build": "tsc && vite build"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "lucide-react": "^0.475.0",
-    "@google/genai": "^1.34.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@types/node": "^20.11.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0"
-  }
-}`;
-
-  const dockerfile = `FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]`;
-
-  // SCRIPT POWERSHELL v1.2.9 - AUTOMATIZADO PARA EL REPO ESPECÍFICO
-  const PS_DEVOPS_SCRIPT = `$utf8NoBom = New-Object System.Text.UTF8Encoding $false;
-$contentPkg = @'
-${pkgJson}
-'@;
-$contentDf = @'
-${dockerfile}
-'@;
-$contentIgnore = @'
-${gitIgnore}
-'@;
-$contentAction = @'
-${githubAction}
-'@;
-
-Write-Host "--- Iniciando Sincronización Nara v1.2.9 ---" -ForegroundColor Magenta;
-
-# Crear archivos base
-[System.IO.File]::WriteAllText("./package.json", $contentPkg, $utf8NoBom);
-[System.IO.File]::WriteAllText("./Dockerfile", $contentDf, $utf8NoBom);
-[System.IO.File]::WriteAllText("./.gitignore", $contentIgnore, $utf8NoBom);
-
-# Crear carpeta de GitHub Actions
-$ghPath = "./.github/workflows";
-if (!(Test-Path $ghPath)) { New-Item -ItemType Directory -Path $ghPath -Force };
-[System.IO.File]::WriteAllText("$ghPath/main.yml", $contentAction, $utf8NoBom);
-
-Write-Host "✅ Archivos de configuración creados con éxito." -ForegroundColor Cyan;
-
-# Comandos Git sugeridos para el repo oscargarciaIA/naraia
-Write-Host "🚀 Pasos para vincular con GitHub:" -ForegroundColor Yellow;
-Write-Host "1. git init" -ForegroundColor Gray;
-Write-Host "2. git remote add origin ${REPO_URL}" -ForegroundColor Gray;
-Write-Host "3. git add ." -ForegroundColor Gray;
-Write-Host "4. git commit -m 'feat: sync with local Nara console v1.2.9'" -ForegroundColor Gray;
-Write-Host "5. git push -u origin main" -ForegroundColor Gray;`;
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -103,78 +19,229 @@ Write-Host "5. git push -u origin main" -ForegroundColor Gray;`;
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const setupSequence = [
+    {
+      step: 1,
+      title: "Capa de Aislamiento (Docker)",
+      console: "Terminal de Sistema (Bash/CMD)",
+      icon: <Server size={20} />,
+      status: "Configurado",
+      desc: "Despliegue de contenedores aislados para Base de Datos y Frontend.",
+      file: "docker-compose.yml"
+    },
+    {
+      step: 2,
+      title: "Extensión Semántica (pgvector)",
+      console: "Consola de Admin SQL (pgAdmin/psql)",
+      icon: <Database size={20} />,
+      status: "Configurado",
+      desc: "Activación del motor de búsqueda vectorial en PostgreSQL 16.",
+      file: "init_knowledge_repository.sql"
+    },
+    {
+      step: 3,
+      title: "Sincronización de Repositorio",
+      console: "PowerShell (Modo Administrador)",
+      icon: <Github size={20} />,
+      status: "Validado",
+      desc: "Script de respaldo y sincronización con el repositorio central corporativo.",
+      file: "sync_to_github.ps1"
+    },
+    {
+      step: 4,
+      title: "Capa de Inteligencia (AI Engine)",
+      console: "Consola de App Service / Node.js",
+      icon: <Cpu size={20} />,
+      status: "Activo",
+      desc: "Configuración de la conexión con Gemini 3 y validación de API Key.",
+      file: "services/geminiService.ts"
+    }
+  ];
+
+  const maintenanceScripts = [
+    {
+      name: "sync_to_github.ps1",
+      console: "PowerShell",
+      desc: "Automatiza el commit y push de los esquemas SQL y configuraciones al repositorio corporativo.",
+      code: `# sync_to_github.ps1 - v1.3.5
+Write-Host "Iniciando sincronización con GitHub Corporativo..." -ForegroundColor Cyan
+git add .
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
+git commit -m "Nara AI Auto-Sync: $timestamp - Actualización de Esquemas Vectoriales"
+git push origin main
+Write-Host "Sincronización completada con éxito." -ForegroundColor Green`
+    }
+  ];
+
+  const dbScripts = [
+    {
+      version: "v1.3.2",
+      name: "init_knowledge_repository.sql",
+      console: "Consola SQL",
+      desc: "Esquema unificado para contratos y manuales con soporte vectorial.",
+      code: `-- v1.3.2: Unified Repository
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE TABLE IF NOT EXISTS nara_knowledge_repository (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    doc_id VARCHAR(50) NOT NULL,
+    tipo_doc VARCHAR(20) NOT NULL,
+    titulo TEXT NOT NULL,
+    contenido TEXT NOT NULL,
+    metadata JSONB,
+    embedding vector(1536),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);`
+    }
+  ];
+
+  const infrastructureFiles = [
+    {
+      name: "docker-compose.yml",
+      console: "Terminal Bash/CMD",
+      desc: "Configuración del stack completo optimizado.",
+      code: `version: '3.8'
+services:
+  nara-vector-db:
+    image: pgvector/pgvector:pg16
+    container_name: nara_vector_engine
+    # ... resto de la configuración`
+    }
+  ];
+
   return (
-    <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-4 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <header className="border-b border-slate-200 pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-2 bg-indigo-600 rounded-lg text-white">
-                <GitMerge size={20} />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800">Sincronización DevOps v1.2.9</h2>
-            </div>
-            <p className="text-slate-500 text-sm">Vinculación automática con el repositorio <span className="font-mono text-indigo-600 font-bold">oscargarciaIA/naraia</span>.</p>
-          </div>
-          <a 
-            href={REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-all shadow-sm"
-          >
-            <Github size={14} /> Ver en GitHub <ExternalLink size={12} />
-          </a>
-        </header>
-
-        <section className="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-800">
-          <div className="px-5 py-4 bg-slate-800 flex justify-between items-center border-b border-slate-700">
-            <div className="flex items-center gap-3">
-              <Terminal size={18} className="text-magenta-400" />
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Script de Vinculación (PowerShell)</span>
-            </div>
+    <div className="flex h-full bg-[#f8fafc]">
+      {/* Sidebar de Navegación */}
+      <div className="w-64 border-r border-slate-200 bg-white flex flex-col shrink-0">
+        <div className="p-6">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Módulos de Control</h3>
+          <nav className="space-y-1">
             <button 
-              onClick={() => copyToClipboard(PS_DEVOPS_SCRIPT, 'devops')}
-              className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-900/20"
+              onClick={() => setActiveTab('roadmap')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === 'roadmap' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}
             >
-              {copied === 'devops' ? <><Check size={14} /> ¡Copiado!</> : <><Copy size={14} /> Copiar Script v1.2.9</>}
+              <LayoutGrid size={16} /> Setup Roadmap
             </button>
-          </div>
-          <div className="p-6 font-mono text-[11px] leading-relaxed max-h-[400px] overflow-y-auto">
-            <pre className="text-indigo-300/80 whitespace-pre-wrap">{PS_DEVOPS_SCRIPT}</pre>
-          </div>
-        </section>
+            <button 
+              onClick={() => setActiveTab('database')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === 'database' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              <Database size={16} /> Scripts SQL
+            </button>
+            <button 
+              onClick={() => setActiveTab('maintenance')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === 'maintenance' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              <Settings2 size={16} /> Mantenimiento
+            </button>
+            <button 
+              onClick={() => setActiveTab('infrastructure')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === 'infrastructure' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              <Server size={16} /> Infraestructura
+            </button>
+          </nav>
+        </div>
+        
+        <div className="mt-auto p-4 bg-slate-50 border-t border-slate-200">
+           <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+             <ShieldCheck size={14} className="text-green-500" />
+             Continuidad Operativa
+           </div>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-200 rounded-lg"><FileCode size={18} className="text-slate-600" /></div>
-              <h4 className="font-bold text-slate-800 text-sm">Configuración de Repositorio</h4>
-            </div>
-            <div className="space-y-3">
-              <div className="text-[11px] text-slate-500 bg-white p-3 rounded-lg border border-slate-100">
-                <p className="font-bold text-slate-700 mb-1 tracking-tight">REMOTE ORIGIN:</p>
-                <code className="text-indigo-600 select-all">{REPO_URL}</code>
+      {/* Área de Visualización */}
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-4xl mx-auto space-y-8">
+          
+          {/* ROADMAP CON ETIQUETAS DE CONSOLA */}
+          {activeTab === 'roadmap' && (
+            <div className="space-y-6 animate-fade-in-up">
+              <header>
+                <h2 className="text-2xl font-bold text-slate-800">Master Setup Roadmap</h2>
+                <p className="text-sm text-slate-500 italic">Siga la secuencia exacta según el entorno de ejecución indicado.</p>
+              </header>
+
+              <div className="relative space-y-4">
+                <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-slate-200 -z-0"></div>
+                
+                {setupSequence.map((step, idx) => (
+                  <div key={idx} className="relative z-10 flex gap-6">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center border-4 border-[#f8fafc] bg-indigo-600 text-white shadow-sm">
+                      {step.icon}
+                    </div>
+                    <div className="flex-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-800">Paso {step.step}: {step.title}</h4>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Monitor size={12} className="text-slate-400" />
+                            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">
+                              {step.console}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 uppercase">
+                          {step.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <ul className="space-y-2 text-[11px] font-mono text-slate-600 pl-2">
-                <li className="flex items-center gap-2"><Check size={12} className="text-green-500"/> .gitignore configurado</li>
-                <li className="flex items-center gap-2"><Check size={12} className="text-green-500"/> GitHub Workflow v1.2.9</li>
-              </ul>
             </div>
-          </div>
+          )}
 
-          <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg"><Github size={18} className="text-indigo-600" /></div>
-              <h4 className="font-bold text-indigo-800 text-sm">Comandos de Primer Envío</h4>
+          {/* MANTENIMIENTO: RESTAURACIÓN DE GITHUB SYNC */}
+          {activeTab === 'maintenance' && (
+            <div className="space-y-6 animate-fade-in-up">
+              <header>
+                <h2 className="text-xl font-bold text-slate-800">Scripts de Mantenimiento y Sincronización</h2>
+                <p className="text-sm text-slate-500">Herramientas restauradas para la persistencia del proyecto.</p>
+              </header>
+
+              {maintenanceScripts.map((script, idx) => (
+                <div key={idx} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Code2 size={16} className="text-indigo-600" />
+                      <span className="text-sm font-bold text-slate-700">{script.name}</span>
+                      <span className="text-[9px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded uppercase font-bold">{script.console}</span>
+                    </div>
+                    <button onClick={() => copyToClipboard(script.code, script.name)} className="text-slate-400 hover:text-indigo-600">
+                      {copied === script.name ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-xs text-slate-500 mb-4">{script.desc}</p>
+                    <div className="bg-slate-900 rounded-xl p-4 font-mono text-[10px] text-cyan-300 overflow-x-auto">
+                      <pre>{script.code}</pre>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="bg-indigo-900/5 p-3 rounded-xl space-y-2 font-mono">
-              <code className="block text-[10px] text-indigo-900 font-bold">git init</code>
-              <code className="block text-[10px] text-indigo-900 font-bold">git remote add origin {REPO_URL}</code>
-              <code className="block text-[10px] text-indigo-900 font-bold">git add .</code>
-              <code className="block text-[10px] text-indigo-900 font-bold">git commit -m "initial sync v1.2.9"</code>
-              <code className="block text-[10px] text-indigo-900 font-bold">git push -u origin main</code>
+          )}
+
+          {/* DATABASE (MANTENER HISTORIAL) */}
+          {activeTab === 'database' && (
+            <div className="space-y-6 animate-fade-in-up">
+              <h2 className="text-xl font-bold text-slate-800">Scripts SQL de Producción</h2>
+              {dbScripts.map((script, idx) => (
+                <div key={idx} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="px-5 py-3 bg-slate-800 text-white flex justify-between items-center">
+                    <span className="text-xs font-bold">{script.name}</span>
+                    <button onClick={() => copyToClipboard(script.code, script.name)}><Copy size={14} /></button>
+                  </div>
+                  <div className="p-5 bg-slate-900 text-[10px] text-indigo-300 font-mono overflow-x-auto">
+                    <pre>{script.code}</pre>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
+
         </div>
       </div>
     </div>

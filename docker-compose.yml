@@ -1,43 +1,48 @@
+
 version: '3.8'
 
 services:
-  # Base de Datos Corporativa (Backend)
-  nara-db:
+  # Base de Datos Vectorial Corporativa
+  nara-vector-db:
     image: pgvector/pgvector:pg16
-    container_name: nara_enterprise_db
+    container_name: nara_vector_engine
     restart: always
     environment:
       POSTGRES_USER: nara_admin
-      POSTGRES_PASSWORD: secure_password_change_me
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nara_secure_2024}
       POSTGRES_DB: nara_knowledge_hub
     volumes:
-      - nara_pg_data:/var/lib/postgresql/data
+      - nara_vector_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
+    networks:
+      - nara_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nara_admin -d nara_knowledge_hub"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Aplicación Web (Frontend)
-  nara-web:
+  # Aplicación Nara (Frontend + Logic)
+  nara-app:
     build: .
     container_name: nara_frontend
     restart: always
     ports:
       - "3000:3000"
-    volumes:
-      # Sincronización en tiempo real para desarrollo (Hot Reload)
-      - .:/app
-      - /app/node_modules
     environment:
-      - CHOKIDAR_USEPOLLING=true
-      # IMPORTANTE: Reemplaza esto con tu API Key real o usa un archivo .env
-      - API_KEY=${API_KEY} 
+      - API_KEY=${API_KEY}
+      - DB_URL=postgresql://nara_admin:nara_secure_2024@nara-vector-db:5432/nara_knowledge_hub
     depends_on:
-      - nara-db
+      nara-vector-db:
+        condition: service_healthy
+    networks:
+      - nara_network
+
+networks:
+  nara_network:
+    driver: bridge
 
 volumes:
-  nara_pg_data:
+  nara_vector_data:

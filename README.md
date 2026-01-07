@@ -1,48 +1,20 @@
-# Nara - Asistente Virtual TI Corporativo
 
-Este proyecto implementa un asistente virtual seguro utilizando React para el frontend y una base de datos PostgreSQL vectorizada (pgvector) contenerizada para el cumplimiento de auditoría y RAG.
+# Nara - Knowledge Hub de Contratos (v1.3.1)
 
-## Requisitos Previos
+Nara ha sido evolucionada para servir como el punto central de consulta de **Contratos y Base de Conocimiento de Negocio**.
 
-1.  **Docker Desktop** instalado y corriendo (WSL2 configurado en Windows).
-2.  **Node.js** (v18 o superior).
-3.  Una **API Key de Google Gemini**.
+## Infraestructura Vectorial (pgvector)
+A diferencia de una base de datos tradicional, pgvector permite realizar **búsquedas semánticas**. Esto significa que Nara entiende el *sentido* de una cláusula contractual, no solo palabras clave.
 
-## Guía de Inicio Paso a Paso
+### Capacidades de Negocio
+- **Ingesta de Contratos**: Almacenamiento indexado de PDFs y documentos legales procesados.
+- **Consultas de SLA**: Respuesta inmediata sobre niveles de servicio acordados con proveedores.
+- **Cumplimiento ISO 27001**: Los datos están aislados en una red Docker privada, sin exposición a la red pública.
 
-### 1. Levantar la Infraestructura (Base de Datos)
+## Despliegue del Esquema Contractual
+1. Ejecuta el script `sync_v1.3.1.ps1`.
+2. Se generará `db/init/01_init_contracts.sql` con la tabla `nara_contracts_knowledge`.
+3. Al iniciar Docker (`docker-compose up -d`), PostgreSQL creará automáticamente esta estructura preparada para IA.
 
-La base de datos se encarga de almacenar los logs de auditoría (cumplimiento ISO 27001) y los vectores de conocimiento.
-
-Abre una terminal en la raíz del proyecto y ejecuta:
-
-```bash
-docker-compose up -d
-```
-
-*Verificación:* Ejecuta `docker ps`. Deberías ver dos contenedores activos: `nara_enterprise_db` y `nara_log_auditor`.
-
-### 2. Iniciar la Aplicación Web (Frontend)
-
-En una **nueva** terminal, instala las dependencias y arranca el servidor de desarrollo:
-
-```bash
-npm install
-npm start
-```
-
-La aplicación se abrirá en [http://localhost:3000](http://localhost:3000).
-
-### 3. Configuración Inicial
-
-1.  Al abrir la app, verás un indicador de "API Key requerida".
-2.  Haz clic en el icono de **Engranaje** (Configuración).
-3.  Ingresa tu **Gemini API Key**.
-    *   *Nota: En un entorno de producción real, esta clave se inyectaría mediante variables de entorno del servidor (CI/CD) y no se pediría al usuario, cumpliendo con las políticas de seguridad.*
-4.  (Opcional) Ingresa un ID de Agente ficticio para simular la conexión "Corporativa".
-
-## Arquitectura de Seguridad
-
-*   **Auditoría**: Cada interacción se registra en la tabla `audit.interaction_logs` dentro de Postgres.
-*   **RBAC**: Se crean roles de base de datos separados (`auditor_sec`, `nara_app_user`) automáticamente al iniciar el contenedor.
-*   **RAG**: Utiliza `pgvector` para búsquedas semánticas sobre documentos corporativos.
+---
+*Área de TI / Auditoría de Negocios - Entorno Seguro Multinacional*
