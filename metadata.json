@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.2.5",
-  "description": "Solución al error TS2688. Inyección de definiciones de tipos de Node.js para el proceso de Build.",
-  "version": "1.2.5",
+  "name": "Nara - Asistente Virtual TI v1.2.6",
+  "description": "Solución al error de SyntaxError en JSON. Implementación de guardado sin BOM.",
+  "version": "1.2.6",
   "requestFramePermissions": []
 }
