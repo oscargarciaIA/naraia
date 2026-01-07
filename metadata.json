@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.3.7",
-  "description": "Stability Edition: Solución a errores de mapeo YAML y autenticación de GitHub.",
-  "version": "1.3.7",
+  "name": "Nara - Asistente Virtual TI v1.3.9",
+  "description": "Sync Edition: Prioriza la descarga de cambios desde GitHub y elimina conflictos de ramas.",
+  "version": "1.3.9",
   "requestFramePermissions": []
 }
