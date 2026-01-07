@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
       'process.env.REACT_APP_AGENT_API_URL': JSON.stringify(env.REACT_APP_AGENT_API_URL || '')
     },
     server: {
-      host: true, 
+      host: '0.0.0.0', 
       strictPort: true,
       port: 3000,
       watch: {
