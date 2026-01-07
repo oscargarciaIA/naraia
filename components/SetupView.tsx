@@ -1,26 +1,6 @@
 
 import React, { useState } from 'react';
-// Added missing icons Info and AlertCircle to the import list
-import { Copy, Check, Terminal, FileCode, Box, Code2, Command, Cpu, Laptop, Monitor, Info, AlertCircle } from 'lucide-react';
-
-const DOCKERFILE_CONTENT = `FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]`;
-
-const DOCKER_COMPOSE_CONTENT = `version: '3.8'
-services:
-  nara-web:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - API_KEY=\${API_KEY}
-    restart: always`;
+import { Copy, Check, Terminal, FileCode, Box, Code2, Command, Cpu, Laptop, Monitor, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 // Comando específico para corregir codificación en Windows PowerShell
 const PS_FIX_COMMAND = `@'
@@ -46,7 +26,7 @@ services:
     restart: always
 '@ | Out-File -FilePath docker-compose.yml -Encoding utf8;
 
-Write-Host "✅ Archivos creados con codificación UTF-8 compatible con Docker." -ForegroundColor Green`;
+Write-Host "✅ Archivos de infraestructura reparados." -ForegroundColor Green`;
 
 const SetupView: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
@@ -63,34 +43,17 @@ const SetupView: React.FC = () => {
       <div className="max-w-5xl mx-auto space-y-6">
         <header className="border-b border-slate-200 pb-6">
           <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-indigo-600 rounded-lg text-white">
-              <Terminal size={20} />
+            <div className="p-2 bg-green-600 rounded-lg text-white">
+              <CheckCircle2 size={20} />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800">Solución de Errores de Despliegue</h2>
+            <h2 className="text-2xl font-bold text-slate-800">Infraestructura v1.2.4</h2>
           </div>
-          <p className="text-slate-500 text-sm">El error <code className="bg-red-50 text-red-600 px-1 rounded font-mono">unknown instruction: §!!</code> es un problema de codificación de Windows. Usa el comando de abajo para repararlo.</p>
+          <p className="text-slate-500 text-sm">Has superado el error de codificación. Ahora hemos actualizado las dependencias para evitar errores de red en Docker.</p>
         </header>
 
-        {/* Selector de SO */}
-        <div className="flex p-1 bg-slate-200 w-fit rounded-xl">
-          <button 
-            onClick={() => setOs('win')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-xs font-bold transition-all ${os === 'win' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            <Laptop size={14} /> Windows (PowerShell)
-          </button>
-          <button 
-            onClick={() => setOs('unix')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-xs font-bold transition-all ${os === 'unix' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            <Monitor size={14} /> Linux / Mac (Bash)
-          </button>
-        </div>
-
-        {/* Consola de Comando */}
         <section className="bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-800">
           <div className="px-5 py-3 bg-slate-800 flex justify-between items-center border-b border-slate-700">
-            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Script de Reparación Automática</span>
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Script de Reparación Final</span>
             <button 
               onClick={() => copyToClipboard(os === 'win' ? PS_FIX_COMMAND : 'cat <<EOF > Dockerfile...', 'script')}
               className="flex items-center gap-2 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
@@ -111,21 +74,19 @@ const SetupView: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200">
             <h4 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
-              {/* Fix: Info icon used after import */}
-              <Info size={16} className="text-blue-500" /> ¿Por qué falló?
+              <Info size={16} className="text-blue-500" /> Resolución de ETARGET
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              PowerShell por defecto usa UTF-16 al redireccionar texto. Docker solo entiende UTF-8. Mi nuevo script usa <code className="bg-slate-100 p-0.5 rounded">Out-File -Encoding utf8</code> para sobreescribir los archivos corruptos con el formato correcto.
+              El error de "No matching version" se debía a un desfase en el registro de NPM. Hemos forzado la versión <code className="bg-slate-100 p-0.5 rounded">1.34.0</code> en el archivo <code className="font-bold">package.json</code> que acabas de actualizar.
             </p>
           </div>
-          <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100">
-            <h4 className="font-bold text-amber-800 text-sm mb-3 flex items-center gap-2">
-              {/* Fix: AlertCircle icon used after import */}
-              <AlertCircle size={16} /> Próximo Paso
+          <div className="bg-green-50 p-5 rounded-2xl border border-green-100">
+            <h4 className="font-bold text-green-800 text-sm mb-3 flex items-center gap-2">
+              <AlertCircle size={16} /> Acción Requerida
             </h4>
-            <p className="text-xs text-amber-800 leading-relaxed">
-              Tras copiar y pegar el comando en tu terminal, vuelve a ejecutar:<br/>
-              <code className="font-bold">docker-compose up --build</code>
+            <p className="text-xs text-green-800 leading-relaxed">
+              Vuelve a tu terminal y ejecuta el comando de construcción habitual:<br/>
+              <code className="font-bold p-1 bg-green-100 rounded mt-2 inline-block">docker-compose up --build</code>
             </p>
           </div>
         </div>
