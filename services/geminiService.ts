@@ -2,13 +2,14 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { MockContextItem, NaraResponse } from '../types';
 
 const NARA_SYSTEM_INSTRUCTION = `
-Eres Nara, el asistente oficial de cumplimiento y TI.
-Tu arquitectura está diseñada para responder basándote ÚNICAMENTE en fuentes oficiales.
-REGLAS CRÍTICAS:
-1. Si la información no está en el CONTEXTO, debes informar que no tienes registros oficiales y sugerir escalamiento.
-2. Mantén un tono técnico, preciso y profesional.
-3. Siempre incluye una nota de cumplimiento legal/normativo.
-4. Si el nivel de confianza en la respuesta es bajo (< 0.7), sugiere escalar a la mesa de ayuda.
+Eres Nara, el asistente virtual oficial del área de TI de una multinacional líder. 
+Tu misión es resolver dudas sobre políticas internas, accesos, licenciamiento y soporte técnico.
+
+PROTOCOLO DE RESPUESTA:
+1. IDENTIDAD: Profesional, técnica y extremadamente servicial.
+2. FUENTES: Responde basándote exclusivamente en el CONTEXTO proporcionado. Si la información no existe allí, indica que no hay registros oficiales y ofrece escalar el caso.
+3. SEGURIDAD: Nunca reveles passwords o keys en texto plano.
+4. CUMPLIMIENTO: Cada respuesta debe finalizar con una breve nota sobre cumplimiento normativo (DLP, GDPR o ISO 27001).
 `;
 
 const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
@@ -31,20 +32,31 @@ const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
 ];
 
 async function searchCorporateKnowledgeBase(query: string): Promise<MockContextItem[]> {
-  // Simulación de búsqueda semántica (En producción, esto consultaría la tabla knowledge.documents en Postgres)
-  await new Promise(resolve => setTimeout(resolve, 300));
+  // Simulación de búsqueda semántica (Vector Search)
+  await new Promise(resolve => setTimeout(resolve, 400));
   const q = query.toLowerCase();
   return LOCAL_MOCK_CONTEXT.filter(item => 
-    q.includes("remoto") || q.includes("monitor") || q.includes("copilot") || q.includes("licencia")
+    q.includes("remoto") || q.includes("monitor") || q.includes("copilot") || q.includes("licencia") || q.includes("laptop")
   );
 }
 
 const NARA_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    respuesta_usuario: { type: Type.STRING },
-    preguntas_aclaratorias: { type: Type.ARRAY, items: { type: Type.STRING } },
-    accion: { type: Type.STRING, enum: ["responder", "escalar_mesa", "escalar_mail"] },
+    respuesta_usuario: { 
+      type: Type.STRING, 
+      description: "Respuesta final redactada para el empleado." 
+    },
+    preguntas_aclaratorias: { 
+      type: Type.ARRAY, 
+      items: { type: Type.STRING },
+      description: "Preguntas para guiar mejor al usuario si su duda es ambigua."
+    },
+    accion: { 
+      type: Type.STRING, 
+      enum: ["responder", "escalar_mesa", "escalar_mail"],
+      description: "Acción lógica recomendada."
+    },
     nivel_confianza: { type: Type.NUMBER },
     fuentes: {
       type: Type.ARRAY,
@@ -75,24 +87,30 @@ export const sendMessageToNara = async (
   userQuestion: string,
   history: { role: string; content: string }[]
 ): Promise<NaraResponse> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   const retrievedContext = await searchCorporateKnowledgeBase(userQuestion);
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [{ role: 'user', parts: [{ text: `CONTEXTO:\n${JSON.stringify(retrievedContext)}\n\nPREGUNTA: ${userQuestion}` }] }],
+      contents: [
+        ...history.map(h => ({ role: h.role, parts: [{ text: h.content }] })),
+        { role: 'user', parts: [{ text: `CONTEXTO CORPORATIVO:\n${JSON.stringify(retrievedContext)}\n\nPREGUNTA DEL EMPLEADO: ${userQuestion}` }] }
+      ],
       config: {
         systemInstruction: NARA_SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: NARA_SCHEMA,
-        temperature: 0, // Máxima precisión técnica
+        temperature: 0.1,
       },
     });
 
-    return JSON.parse(response.text || '{}') as NaraResponse;
+    const text = response.text;
+    if (!text) throw new Error("Empty response from Nara Engine");
+    
+    return JSON.parse(text) as NaraResponse;
   } catch (error) {
-    console.error("Nara AI Core Error:", error);
+    console.error("Nara AI Core Critical Error:", error);
     throw error;
   }
 };
