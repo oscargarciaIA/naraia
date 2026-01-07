@@ -1,0 +1,5 @@
+{
+  "name": "Nara - Asistente Virtual TI",
+  "description": "Interfaz de chat profesional para Nara, el asistente de TI especializado en contratos, políticas y licenciamiento, con visualización de fuentes y lógica de compliance.",
+  "requestFramePermissions": []
+}
