@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.1.4",
-  "description": "Interfaz de chat corporativa de Nara. Incluye soporte para despliegue en contenedores Docker y cumplimiento normativo TI.",
-  "version": "1.1.4",
+  "name": "Nara - Asistente Virtual TI v1.2.1",
+  "description": "Interfaz de chat corporativa de Nara. Incluye módulo de configuración técnica y soporte para despliegue manual de Docker.",
+  "version": "1.2.1",
   "requestFramePermissions": []
 }

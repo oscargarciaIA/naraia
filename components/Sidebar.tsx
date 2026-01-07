@@ -1,11 +1,15 @@
 
 import React from 'react';
-import { Shield, Database, Activity, Cpu, Server, Globe } from 'lucide-react';
+import { Shield, Database, Activity, Cpu, Server, Settings } from 'lucide-react';
 import { AgentConfig } from '../types';
 
-interface SidebarProps { agentConfig: AgentConfig; }
+interface SidebarProps { 
+  agentConfig: AgentConfig;
+  activeView: 'chat' | 'setup';
+  setActiveView: (view: 'chat' | 'setup') => void;
+}
 
-const Sidebar: React.FC<SidebarProps> = ({ agentConfig }) => {
+const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveView }) => {
   return (
     <div className="h-full flex flex-col bg-slate-900 text-slate-300 border-r border-slate-800">
       <div className="p-6">
@@ -20,6 +24,26 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig }) => {
         </div>
 
         <nav className="space-y-6">
+          <section>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center">
+              Navegación
+            </h3>
+            <div className="space-y-1">
+              <button 
+                onClick={() => setActiveView('chat')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeView === 'chat' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-400'}`}
+              >
+                <Activity size={16} /> Centro de Ayuda
+              </button>
+              <button 
+                onClick={() => setActiveView('setup')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeView === 'setup' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-400'}`}
+              >
+                <Settings size={16} /> Configuración de IT
+              </button>
+            </div>
+          </section>
+
           <section>
             <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center">
               <Server size={12} className="mr-2"/> Infraestructura
@@ -43,22 +67,6 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig }) => {
                 <div className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
                   <Cpu size={10} /> Gemini 3 Flash
                 </div>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center">
-              <Activity size={12} className="mr-2"/> Métricas Live
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-slate-800/30 p-2 rounded-lg border border-slate-700/30 text-center">
-                <div className="text-[10px] text-slate-500 mb-1">Latencia</div>
-                <div className="text-xs font-bold text-white">420ms</div>
-              </div>
-              <div className="bg-slate-800/30 p-2 rounded-lg border border-slate-700/30 text-center">
-                <div className="text-[10px] text-slate-500 mb-1">Uptime</div>
-                <div className="text-xs font-bold text-white">99.9%</div>
               </div>
             </div>
           </section>
