@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Copy, Check, Terminal, FileCode, Box, Code2, Command, Cpu, Laptop, Monitor, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Copy, Check, Terminal, FileCode, Box, Code2, Command, Cpu, Laptop, Monitor, Info, AlertCircle, CheckCircle2, Wrench } from 'lucide-react';
 
 // Comando específico para corregir codificación en Windows PowerShell
 const PS_FIX_COMMAND = `@'
@@ -26,7 +26,7 @@ services:
     restart: always
 '@ | Out-File -FilePath docker-compose.yml -Encoding utf8;
 
-Write-Host "✅ Archivos de infraestructura reparados." -ForegroundColor Green`;
+Write-Host "✅ Configuración de tipos y build reparada." -ForegroundColor Green`;
 
 const SetupView: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
@@ -43,17 +43,17 @@ const SetupView: React.FC = () => {
       <div className="max-w-5xl mx-auto space-y-6">
         <header className="border-b border-slate-200 pb-6">
           <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-green-600 rounded-lg text-white">
-              <CheckCircle2 size={20} />
+            <div className="p-2 bg-blue-600 rounded-lg text-white">
+              <Wrench size={20} />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800">Infraestructura v1.2.4</h2>
+            <h2 className="text-2xl font-bold text-slate-800">Finalización de Despliegue v1.2.5</h2>
           </div>
-          <p className="text-slate-500 text-sm">Has superado el error de codificación. Ahora hemos actualizado las dependencias para evitar errores de red en Docker.</p>
+          <p className="text-slate-500 text-sm">Estamos resolviendo el error de tipos de Node.js. Este es el último paso técnico para que el build sea exitoso.</p>
         </header>
 
         <section className="bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-800">
           <div className="px-5 py-3 bg-slate-800 flex justify-between items-center border-b border-slate-700">
-            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Script de Reparación Final</span>
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Script de Sincronización</span>
             <button 
               onClick={() => copyToClipboard(os === 'win' ? PS_FIX_COMMAND : 'cat <<EOF > Dockerfile...', 'script')}
               className="flex items-center gap-2 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
@@ -72,21 +72,21 @@ const SetupView: React.FC = () => {
         </section>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <h4 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
-              <Info size={16} className="text-blue-500" /> Resolución de ETARGET
+              <Info size={16} className="text-blue-500" /> ¿Qué corregimos?
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              El error de "No matching version" se debía a un desfase en el registro de NPM. Hemos forzado la versión <code className="bg-slate-100 p-0.5 rounded">1.34.0</code> en el archivo <code className="font-bold">package.json</code> que acabas de actualizar.
+              El entorno de Docker no tenía instalados los tipos de Node.js (<code className="bg-slate-100 p-0.5 rounded">@types/node</code>), lo que hacía que el paso <code className="italic">npm run build</code> fallara al validar el código. Ahora el compilador ya tiene sus definiciones.
             </p>
           </div>
-          <div className="bg-green-50 p-5 rounded-2xl border border-green-100">
-            <h4 className="font-bold text-green-800 text-sm mb-3 flex items-center gap-2">
-              <AlertCircle size={16} /> Acción Requerida
+          <div className="bg-indigo-50 p-5 rounded-2xl border border-indigo-100">
+            <h4 className="font-bold text-indigo-800 text-sm mb-3 flex items-center gap-2">
+              <AlertCircle size={16} /> Paso de Oro
             </h4>
-            <p className="text-xs text-green-800 leading-relaxed">
-              Vuelve a tu terminal y ejecuta el comando de construcción habitual:<br/>
-              <code className="font-bold p-1 bg-green-100 rounded mt-2 inline-block">docker-compose up --build</code>
+            <p className="text-xs text-indigo-800 leading-relaxed font-medium">
+              Asegúrate de que este cambio se guarde y ejecuta por última vez:<br/>
+              <code className="font-bold p-1 bg-white border border-indigo-200 rounded mt-2 inline-block text-indigo-700">docker-compose up --build</code>
             </p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.2.4",
-  "description": "Corrección de error ETARGET en Docker. Alineación de dependencias del SDK de Gemini a v1.34.0.",
-  "version": "1.2.4",
+  "name": "Nara - Asistente Virtual TI v1.2.5",
+  "description": "Solución al error TS2688. Inyección de definiciones de tipos de Node.js para el proceso de Build.",
+  "version": "1.2.5",
   "requestFramePermissions": []
 }
