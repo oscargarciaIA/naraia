@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.3.6",
-  "description": "Integrity Edition: Script de sincronización GitHub restaurado y optimizado para entornos corporativos.",
-  "version": "1.3.6",
+  "name": "Nara - Asistente Virtual TI v1.3.7",
+  "description": "Stability Edition: Solución a errores de mapeo YAML y autenticación de GitHub.",
+  "version": "1.3.7",
   "requestFramePermissions": []
 }
