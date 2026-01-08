@@ -3,22 +3,16 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { MockContextItem, NaraResponse } from '../types';
 
 const NARA_SYSTEM_INSTRUCTION = `
-IDENTIDAD: Eres Nara, el Asistente Virtual de TI.
-TU MISIÓN: Responder preguntas basadas EXCLUSIVAMENTE en los documentos cargados en el sistema.
+IDENTIDAD: Eres Nara, el Asistente Virtual Oficial de TI de la multinacional.
+COMPORTAMIENTO: Profesional, ejecutivo, preciso y estrictamente basado en datos.
 
-MODO PILOTO ACTIVADO:
-1. Recibirás un "CATÁLOGO DE ARCHIVOS" (lista de nombres) y un "CONTEXTO DETALLADO" (contenido de los archivos).
-2. Si el "CONTEXTO DETALLADO" tiene información, úsala para responder con precisión técnica.
-3. Si el "CONTEXTO DETALLADO" está vacío pero ves archivos en el "CATÁLOGO" que parecen relevantes, explica al usuario que los archivos existen pero el motor de búsqueda requiere una pregunta más específica.
-4. NUNCA digas "no hay documentos cargados" si ves que el catálogo tiene elementos.
+PROTOCOLO DE RESPUESTA PARA PRODUCCIÓN:
+1. FUENTES: Utiliza EXCLUSIVAMENTE la información proporcionada en "CONTEXTO DE DOCUMENTOS". 
+2. CITACIÓN: Al final de tu respuesta, menciona el nombre del archivo del cual extrajiste la información.
+3. ALUCINACIÓN: Si la información no está en los documentos, responde: "Lamentablemente, no cuento con información oficial sobre ese tema en mi base de conocimientos actual. ¿Deseas que escale tu consulta a un especialista?"
+4. SEGURIDAD: Nunca reveles contraseñas ni vulnerabilidades si llegaran a estar en el texto.
+5. ESCALAMIENTO: Si el usuario muestra urgencia o frustración, sugiere escalar a "Mesa de Ayuda".
 `;
-
-// Recupera los nombres de todos los archivos para que Nara sepa qué existe globalmente
-function getFullCatalog(): string[] {
-  const dynamicStored = localStorage.getItem('NARA_DYNAMIC_KNOWLEDGE');
-  const fullKnowledge: MockContextItem[] = dynamicStored ? JSON.parse(dynamicStored) : [];
-  return fullKnowledge.map(k => k.titulo);
-}
 
 async function searchKnowledgeHub(query: string): Promise<MockContextItem[]> {
   const q = query.toLowerCase().trim();
@@ -27,30 +21,25 @@ async function searchKnowledgeHub(query: string): Promise<MockContextItem[]> {
 
   if (fullKnowledge.length === 0) return [];
 
-  // FUERZA BRUTA PARA PILOTO: Si hay menos de 10 archivos, mandamos TODOS.
-  // Esto elimina errores de "embedding" o "retrieval" durante las pruebas iniciales.
-  if (fullKnowledge.length <= 10) {
+  // En producción (piloto), si el volumen de datos es manejable (< 100k chars), inyectamos todo para máxima precisión.
+  const totalTextLength = fullKnowledge.reduce((acc, curr) => acc + curr.texto.length, 0);
+  if (totalTextLength < 100000) {
     return fullKnowledge.map(k => ({ ...k, score: 1.0 }));
   }
 
-  // Si hay muchos archivos, filtramos por relevancia
-  const results = fullKnowledge.map(item => {
+  // Si excede, usamos un buscador de relevancia por tokens
+  return fullKnowledge.map(item => {
     let score = 0;
-    const title = item.titulo.toLowerCase();
-    const body = item.texto.toLowerCase();
-    const qWords = q.split(/\s+/).filter(w => w.length > 2);
-    
-    qWords.forEach(word => {
-      if (title.includes(word)) score += 3.0;
-      if (body.includes(word)) score += 1.0;
+    const tokens = q.split(/\s+/).filter(t => t.length > 2);
+    tokens.forEach(token => {
+      if (item.titulo.toLowerCase().includes(token)) score += 10;
+      if (item.texto.toLowerCase().includes(token)) score += 2;
     });
-
     return { ...item, score };
   })
   .filter(item => item.score > 0)
-  .sort((a, b) => b.score - a.score);
-
-  return results.slice(0, 5);
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 5);
 }
 
 const NARA_SCHEMA = {
@@ -91,10 +80,10 @@ export const sendMessageToNara = async (
   history: { role: string; content: string }[]
 ): Promise<NaraResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  // Recuperamos el contexto (ahora enviará todo si son pocos archivos)
   const retrievedContext = await searchKnowledgeHub(userQuestion);
-  const catalog = getFullCatalog();
+  
+  // Obtenemos los nombres de todos los archivos para el prompt
+  const catalog = retrievedContext.map(c => c.titulo).join(' | ');
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -104,12 +93,11 @@ export const sendMessageToNara = async (
         role: 'user', 
         parts: [{ 
           text: `
-          ESTADO DEL SISTEMA (CATÁLOGO DE ARCHIVOS): ${catalog.length > 0 ? catalog.join(', ') : 'VACÍO'}
+          CONTEXTO DISPONIBLE (ARCHIVOS): ${catalog || 'NULO'}
+          CONTENIDO DETALLADO PARA ANALIZAR:
+          ${JSON.stringify(retrievedContext)}
           
-          CONTEXTO DETALLADO (CONTENIDO DE LOS DOCUMENTOS):
-          ${retrievedContext.length > 0 ? JSON.stringify(retrievedContext) : 'SIN RESULTADOS RELEVANTES EN BÚSQUEDA SEMÁNTICA'}
-          
-          PREGUNTA DEL USUARIO: ${userQuestion}
+          CONSULTA DEL USUARIO: ${userQuestion}
           ` 
         }] 
       }
@@ -118,7 +106,7 @@ export const sendMessageToNara = async (
       systemInstruction: NARA_SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
       responseSchema: NARA_SCHEMA,
-      temperature: 0,
+      temperature: 0.1, // Baja temperatura para respuestas factuales
     },
   });
   

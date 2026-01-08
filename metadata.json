@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v2.1.0",
-  "description": "Punto de Control Maestro: Arquitectura consolidada y despliegue Docker verificado.",
-  "version": "2.1.0",
+  "name": "Nara - Asistente Virtual TI v3.0.0 PROD",
+  "description": "Versión Final Pilot: Motor de ingesta real y razonamiento de grado corporativo mediante Gemini 3 Pro.",
+  "version": "3.0.0",
   "requestFramePermissions": []
 }

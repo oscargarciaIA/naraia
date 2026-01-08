@@ -6,10 +6,10 @@ import { ChatMessage, NaraResponse } from '../types';
 import { sendMessageToNara } from '../services/geminiService';
 
 const SUGGESTIONS = [
-  "¿Cuál es la política de trabajo remoto?",
-  "¿Necesito licencia para Copilot?",
-  "¿Cómo solicito un monitor adicional?",
-  "¿Qué laptops están disponibles?"
+  "¿Cuál es el tiempo de respuesta para un incidente P1?",
+  "¿Dónde puedo ver el inventario de laptops?",
+  "¿Cómo configuro el acceso VPN?",
+  "Necesito ayuda humana (Escalamiento)"
 ];
 
 const Chat: React.FC = () => {
@@ -17,9 +17,9 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{
       id: 'welcome', role: 'assistant', timestamp: new Date(),
       content: { 
-        respuesta_usuario: "Hola, soy Nara v2.0. Estoy aquí para asistirte con normativas de TI, licenciamiento y acceso a recursos corporativos. Mi núcleo ha sido verificado. ¿En qué puedo ayudarte hoy?", 
+        respuesta_usuario: "Bienvenido al Canal Oficial de Nara v3.0. He sincronizado la base de conocimiento de TI para este piloto. Puedo asistirte con manuales, SLAs y gestión de recursos. ¿Cuál es tu requerimiento?", 
         fuentes: [],
-        nota_compliance: "Toda interacción está sujeta a la Política de Uso Aceptable de Activos.",
+        nota_compliance: "Sesión monitoreada bajo estándares ISO 27001.",
         accion: "responder",
         nivel_confianza: 1,
         escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null },
@@ -51,7 +51,7 @@ const Chat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const history = messages.slice(-6).map(m => ({ 
+      const history = messages.slice(-10).map(m => ({ 
         role: m.role === 'user' ? 'user' : 'model', 
         content: m.role === 'user' ? (m.content as string) : (m.content as NaraResponse).respuesta_usuario 
       }));
@@ -66,7 +66,7 @@ const Chat: React.FC = () => {
       }]);
     } catch (err) {
       console.error(err);
-      setError("No se pudo conectar con el núcleo de Nara v2.0. Verifique la API Key o la conexión de red.");
+      setError("Error de Sincronización: El núcleo Nara no responde. Verifica la API_KEY en tu Docker Desktop.");
     } finally {
       setIsLoading(false);
     }
@@ -83,17 +83,18 @@ const Chat: React.FC = () => {
                 <div className="bg-indigo-100 p-2 rounded-lg">
                    <Sparkles size={18} />
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-widest">Nara v2.0 procesando consulta...</span>
+                <span className="text-xs font-bold uppercase tracking-widest">Nara v3.0 analizando manuales...</span>
               </div>
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-3 text-red-700 animate-fade-in-up">
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-3 text-amber-700 animate-fade-in-up">
                 <AlertTriangle size={20} />
                 <div className="flex-1">
-                   <p className="text-sm font-medium">{error}</p>
+                   <p className="text-sm font-bold uppercase tracking-tighter">Falla de Núcleo</p>
+                   <p className="text-xs opacity-80">{error}</p>
                 </div>
-                <button onClick={() => handleSend(messages[messages.length-1].content as string)} className="p-2 hover:bg-red-100 rounded-lg transition-colors">
+                <button onClick={() => handleSend(messages[messages.length-1].content as string)} className="p-2 hover:bg-amber-100 rounded-lg transition-colors">
                   <RefreshCw size={16} />
                 </button>
               </div>
@@ -102,14 +103,14 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white border-t border-slate-200 p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+      <div className="bg-white border-t border-slate-200 p-6 shadow-2xl z-20">
         <div className="max-w-4xl mx-auto">
             {messages.length < 3 && !isLoading && (
               <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up">
                 {SUGGESTIONS.map((s, i) => (
                   <button 
                     key={i} onClick={() => handleSend(s)}
-                    className="text-[11px] font-medium bg-white text-slate-600 px-4 py-2 rounded-full border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all shadow-sm"
+                    className="text-[10px] font-bold bg-slate-50 text-slate-500 px-4 py-2 rounded-xl border border-slate-200 hover:border-indigo-500 hover:text-indigo-600 hover:bg-white transition-all shadow-sm uppercase tracking-tighter"
                   >
                     {s}
                   </button>
@@ -117,30 +118,26 @@ const Chat: React.FC = () => {
               </div>
             )}
             
-            <div className="relative group">
+            <div className="relative">
                 <input 
                     value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                     disabled={isLoading}
-                    placeholder="Escribe tu consulta sobre políticas, accesos o hardware..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-5 pr-16 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all text-sm shadow-inner placeholder:text-slate-400"
+                    placeholder="Escribe tu consulta oficial para TI..."
+                    className="w-full bg-slate-100 border-none rounded-2xl px-6 py-5 pr-16 focus:ring-4 focus:ring-indigo-600/10 focus:bg-white transition-all text-sm font-medium"
                 />
                 <button 
                   onClick={() => handleSend()} 
                   disabled={isLoading || !input.trim()}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-30 disabled:grayscale shadow-lg shadow-indigo-200 transition-all active:scale-95 flex items-center justify-center"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-30 shadow-lg transition-all active:scale-95"
                 >
                     <Send size={20} />
                 </button>
             </div>
             
-            <div className="flex justify-between items-center px-2 mt-4">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">
-                AES-256 encrypted session
-              </span>
-              <span className="text-[10px] text-slate-400 font-bold uppercase">
-                Nara Core v2.0.0 • Punto de Control Estable
-              </span>
+            <div className="flex justify-between items-center px-2 mt-4 opacity-40">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Pilot Sync Active</span>
+              <span className="text-[9px] font-bold uppercase">Nara Core Production v3.0.0</span>
             </div>
         </div>
       </div>
