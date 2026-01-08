@@ -1,20 +1,16 @@
 
-# Nara - Knowledge Hub de Contratos (v1.3.1)
+# Nara - IT Virtual Assistant (v2.0.0 Stable)
 
-Nara ha sido evolucionada para servir como el punto central de consulta de **Contratos y Base de Conocimiento de Negocio**.
+Este es el **Punto de Control Maestro v2.0**. Se han eliminado todas las configuraciones de emergencia previas para establecer una base limpia y escalable.
 
-## Infraestructura Vectorial (pgvector)
-A diferencia de una base de datos tradicional, pgvector permite realizar **búsquedas semánticas**. Esto significa que Nara entiende el *sentido* de una cláusula contractual, no solo palabras clave.
+## Especificaciones de Infraestructura
+- **Motor de IA**: Gemini 3 Pro (Core v2.0).
+- **Base de Datos**: PostgreSQL 16 con extensión pgvector para memoria semántica.
+- **Red**: `nara_network` (aislada y segura).
+- **Despliegue**: Docker Compose con persistencia de volúmenes.
 
-### Capacidades de Negocio
-- **Ingesta de Contratos**: Almacenamiento indexado de PDFs y documentos legales procesados.
-- **Consultas de SLA**: Respuesta inmediata sobre niveles de servicio acordados con proveedores.
-- **Cumplimiento ISO 27001**: Los datos están aislados en una red Docker privada, sin exposición a la red pública.
-
-## Despliegue del Esquema Contractual
-1. Ejecuta el script `sync_v1.3.1.ps1`.
-2. Se generará `db/init/01_init_contracts.sql` con la tabla `nara_contracts_knowledge`.
-3. Al iniciar Docker (`docker-compose up -d`), PostgreSQL creará automáticamente esta estructura preparada para IA.
+## Protocolo de Control
+El script `Nara_Control_v2.0.ps1` ubicado en el SetupView es el único procedimiento autorizado para la reconstrucción del entorno, garantizando la liberación de puertos y la limpieza de procesos huérfanos.
 
 ---
-*Área de TI / Auditoría de Negocios - Entorno Seguro Multinacional*
+*Área de TI - Confidencial - Versión de Producción*

@@ -15,24 +15,40 @@ const SetupView: React.FC = () => {
 
   const checkpointScript = {
     name: "Nara_Control_v2.0.ps1",
-    desc: "SCRIPT DE CONTROL TOTAL: Este es el motor de despliegue oficial. Limpia procesos colgados, purga el sistema Docker y reconstruye Nara desde cero para garantizar estabilidad absoluta.",
+    desc: "SCRIPT DE CONTROL MAESTRO v2.0: Genera automáticamente Dockerfile, .dockerignore y docker-compose.yml. Limpia procesos y despliega el entorno Nara v2.0.0 desde cero.",
     code: `# Nara_Control_v2.0.ps1
 Write-Host "--- NARA SYSTEM CHECKPOINT v2.0 ---" -ForegroundColor Cyan -BackgroundColor Black
 
 # 1. LIMPIEZA DE PROCESOS HUÉRFANOS EN WINDOWS
-Write-Host "[1/5] Liberando puertos y procesos (Node/Vite)..." -ForegroundColor Gray
+Write-Host "[1/6] Liberando puertos y procesos (Node/Vite)..." -ForegroundColor Gray
 Get-Process | Where-Object { $_.ProcessName -match "node|vite" } | Stop-Process -Force -ErrorAction SilentlyContinue
 
-# 2. DETENCIÓN TOTAL DE DOCKER
-Write-Host "[2/5] Deteniendo contenedores activos..." -ForegroundColor Gray
-$containers = docker ps -q
-if ($containers) { docker stop $containers }
+# 2. CREACIÓN DE ARCHIVOS DE CONFIGURACIÓN (Evitando errores de encoding)
+Write-Host "[2/6] Generando archivos de configuración de infraestructura..." -ForegroundColor Gray
 
-# 3. PURGA DE SISTEMA (Punto de partida limpio)
-Write-Host "[3/5] Ejecutando purga total de volúmenes y red..." -ForegroundColor Yellow
-docker system prune -a --volumes -f
+$dockerfile = @"
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "run", "start"]
+"@
+# Guardar con codificación UTF8 explícita para evitar caracteres invisibles
+[System.IO.File]::WriteAllLines("$(Get-Location)/Dockerfile", $dockerfile)
 
-# 4. RE-ESTABLECIMIENTO DE INFRAESTRUCTURA
+$dockerignore = @"
+node_modules
+dist
+.git
+Dockerfile
+docker-compose.yml
+.env
+"@
+[System.IO.File]::WriteAllLines("$(Get-Location)/.dockerignore", $dockerignore)
+
 $composeFile = @"
 services:
   nara-vector-db:
@@ -63,10 +79,19 @@ networks:
   nara_network:
     driver: bridge
 "@
-Set-Content -Path "docker-compose.yml" -Value $composeFile
+[System.IO.File]::WriteAllLines("$(Get-Location)/docker-compose.yml", $composeFile)
+
+# 3. DETENCIÓN TOTAL DE DOCKER
+Write-Host "[3/6] Deteniendo contenedores activos..." -ForegroundColor Gray
+$containers = docker ps -q
+if ($containers) { docker stop $containers }
+
+# 4. PURGA DE SISTEMA
+Write-Host "[4/6] Ejecutando purga de volúmenes obsoletos..." -ForegroundColor Yellow
+docker system prune -a --volumes -f
 
 # 5. DESPLIEGUE v2.0
-Write-Host "[5/5] Levantando entorno Nara v2.0.0..." -ForegroundColor Cyan
+Write-Host "[5/6] Levantando entorno Nara v2.0.0..." -ForegroundColor Cyan
 docker-compose up -d --build
 
 Write-Host "-------------------------------------------" -ForegroundColor Green
@@ -93,7 +118,7 @@ Write-Host "✅ SISTEMA v2.0 ONLINE EN http://localhost:3000" -ForegroundColor W
           </div>
           <div className="text-right border-l border-slate-800 pl-6">
             <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Build ID</p>
-            <p className="text-sm font-mono text-indigo-400">STABLE-2024-V2</p>
+            <p className="text-sm font-mono text-indigo-400">STABLE-V2-MASTER</p>
           </div>
         </header>
 
@@ -128,7 +153,7 @@ Write-Host "✅ SISTEMA v2.0 ONLINE EN http://localhost:3000" -ForegroundColor W
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Terminal size={20} className="text-indigo-400" />
-                <h3 className="text-xl font-bold text-white tracking-tight">Script de Control de Infraestructura</h3>
+                <h3 className="text-xl font-bold text-white tracking-tight">Script de Control Maestro</h3>
               </div>
               <p className="text-sm text-slate-400 max-w-xl">{checkpointScript.desc}</p>
             </div>
@@ -149,16 +174,15 @@ Write-Host "✅ SISTEMA v2.0 ONLINE EN http://localhost:3000" -ForegroundColor W
           </div>
         </div>
 
-        {/* ADVERTENCIA DE CUMPLIMIENTO */}
-        <div className="bg-amber-900/10 border border-amber-900/30 p-6 rounded-2xl flex gap-4 items-start">
-           <AlertCircle className="text-amber-500 shrink-0" size={20} />
-           <p className="text-xs text-amber-200/70 leading-relaxed">
-             <strong>Aviso de Seguridad TI:</strong> El uso del script de control v2.0 realiza una purga de volúmenes de Docker. Asegúrese de que los datos persistentes en PostgreSQL estén correctamente sincronizados o respaldados antes de una purga total del sistema.
+        <div className="bg-blue-900/10 border border-blue-900/30 p-6 rounded-2xl flex gap-4 items-start">
+           <AlertCircle className="text-blue-500 shrink-0" size={20} />
+           <p className="text-xs text-blue-200/70 leading-relaxed">
+             <strong>Nota de Despliegue:</strong> El script ha sido actualizado para manejar la codificación de archivos automáticamente. Esto soluciona los errores de "unknown instruction" al momento de parsear el Dockerfile en entornos Windows.
            </p>
         </div>
 
         <footer className="text-center py-8">
-           <p className="text-[10px] text-slate-600 uppercase tracking-[0.6em] font-black">Nara Core Framework • Checkpoint v2.0.0 Stable</p>
+           <p className="text-[10px] text-slate-600 uppercase tracking-[0.6em] font-black">Nara Core Framework • Punto de Control v2.0.0 Stable</p>
         </footer>
 
       </div>

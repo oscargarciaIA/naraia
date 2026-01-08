@@ -2,33 +2,38 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MockContextItem, NaraResponse } from '../types';
 
+/**
+ * PROMPT MAESTRO - NARA v2.0
+ * Este bloque define la identidad y límites operativos del asistente.
+ */
 const NARA_SYSTEM_INSTRUCTION = `
-IDENTIDAD: Eres Nara, el Asistente Virtual de TI v2.0 (Production Core).
-ESTADO: Sistema estable y verificado.
+IDENTIDAD: Eres Nara, el Asistente Virtual oficial del área de TI de la multinacional.
+VERSIÓN: 2.0.0 Stable Checkpoint.
+NÚCLEO: Sistema de respuesta basado en Conocimiento Corporativo y Gestión de Infraestructura.
 
-REGLAS DE RESPUESTA:
-1. PRIORIDAD: Usa el Knowledge Hub corporativo (PostgreSQL + pgvector).
-2. SEGURIDAD: Aplica protocolos de la multinacional.
-3. TONO: Profesional, eficiente y servicial.
-4. VERSIONAMIENTO: Si te preguntan, confirma que estás operando bajo el núcleo v2.0 Estable.
+OBJETIVOS:
+1. Responder preguntas frecuentes sobre políticas de TI, hardware, software y accesos.
+2. Guiar al usuario en el uso de herramientas corporativas.
+3. Facilitar la gestión de la infraestructura mediante scripts de control cuando sea requerido.
+
+REGLAS DE COMPORTAMIENTO:
+- PRIORIDAD DE DATOS: Usa siempre el contexto corporativo proporcionado (Knowledge Hub).
+- SEGURIDAD: Nunca reveles credenciales sensibles. Si detectas un riesgo, notifica cumplimiento.
+- TONO: Profesional, ejecutivo, directo y altamente eficiente.
+- VERSIONAMIENTO: Eres la versión 2.0. Cualquier consulta sobre tu estado debe confirmar que operas bajo el Punto de Control Maestro.
+
+ESTRUCTURA DE SALIDA:
+Debes responder estrictamente en el formato JSON definido, asegurando que la 'respuesta_usuario' sea amigable pero técnica.
 `;
 
 const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
   {
-    doc_id: "MAN-IT-001",
-    titulo: "Manual de Configuración VPN Corporativa",
-    seccion_o_clausula: "Capítulo 2: Acceso Remoto",
-    fecha_version: "2024-02-10",
-    texto: "Para acceder a la red interna, el usuario debe tener activo el MFA via Microsoft Authenticator. El servidor de entrada es vpn.multinacional.com.",
-    score: 0.95
-  },
-  {
-    doc_id: "CONT-HW-2024",
-    titulo: "Contrato Suministro Dell Technologies",
-    seccion_o_clausula: "Anexo A: Tiempos de Entrega",
-    fecha_version: "2024-01-01",
-    texto: "La entrega de nuevos equipos portátiles (Latitude 5440) tiene un plazo máximo de 15 días hábiles tras la aprobación del ticket de compra.",
-    score: 0.92
+    doc_id: "POL-IT-2024",
+    titulo: "Política General de Activos TI",
+    seccion_o_clausula: "Sección 4: Renovación de Equipos",
+    fecha_version: "2024-01-15",
+    texto: "Los equipos portátiles se renuevan cada 3 años. El usuario debe abrir un ticket en Mesa de Ayuda 30 días antes del vencimiento.",
+    score: 0.98
   }
 ];
 
@@ -36,7 +41,7 @@ async function searchCorporateKnowledgeBase(query: string): Promise<MockContextI
   await new Promise(resolve => setTimeout(resolve, 400));
   const q = query.toLowerCase();
   return LOCAL_MOCK_CONTEXT.filter(item => 
-    q.includes("vpn") || q.includes("manual") || q.includes("entrega") || q.includes("equipo") || q.includes("laptop")
+    q.includes("política") || q.includes("equipo") || q.includes("renovación") || q.includes("laptop")
   );
 }
 
@@ -45,7 +50,7 @@ const NARA_SCHEMA = {
   properties: {
     respuesta_usuario: { type: Type.STRING },
     preguntas_aclaratorias: { type: Type.ARRAY, items: { type: Type.STRING } },
-    accion: { type: Type.STRING, enum: ["responder", "buscar_vector", "escalar_mesa"] },
+    accion: { type: Type.STRING, enum: ["responder", "buscar_vector", "escalar_mesa", "escalar_mail"] },
     nivel_confianza: { type: Type.NUMBER },
     fuentes: {
       type: Type.ARRAY,
