@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.4.0 (Total Prune)",
-  "description": "Edición de Rescate Final: Diseñada para solucionar errores de socket y procesos huérfanos.",
-  "version": "1.4.0",
+  "name": "Nara - Asistente Virtual TI v2.0.0",
+  "description": "Edición Estable: Dashboard de soporte y sincronización de infraestructura corporativa.",
+  "version": "2.0.0",
   "requestFramePermissions": []
 }

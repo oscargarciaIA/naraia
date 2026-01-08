@@ -1,8 +1,8 @@
 
 {
   "name": "nara-virtual-assistant",
-  "version": "1.2.4",
-  "description": "Asistente Virtual TI - Versión Estable",
+  "version": "2.0.0",
+  "description": "Asistente Virtual TI - Versión de Producción",
   "type": "module",
   "scripts": {
     "start": "vite --host 0.0.0.0 --port 3000",
