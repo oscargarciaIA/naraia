@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v1.2.4 (Restaurada)",
-  "description": "Stable Core Edition: Versión recuperada y validada para despliegue en contenedores.",
-  "version": "1.2.4",
+  "name": "Nara - Asistente Virtual TI v1.4.0 (Total Prune)",
+  "description": "Edición de Rescate Final: Diseñada para solucionar errores de socket y procesos huérfanos.",
+  "version": "1.4.0",
   "requestFramePermissions": []
 }
