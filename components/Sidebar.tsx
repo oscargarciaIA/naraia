@@ -1,15 +1,29 @@
 
-import React from 'react';
-import { Shield, Database, Activity, Server, Settings, Github, GitBranch, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, Database, Activity, Server, Settings, CheckCircle, BookOpen } from 'lucide-react';
 import { AgentConfig } from '../types';
 
 interface SidebarProps { 
   agentConfig: AgentConfig;
-  activeView: 'chat' | 'setup';
-  setActiveView: (view: 'chat' | 'setup') => void;
+  activeView: 'chat' | 'setup' | 'knowledge';
+  setActiveView: (view: 'chat' | 'setup' | 'knowledge') => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveView }) => {
+  const [vectorCount, setVectorCount] = useState(0);
+
+  useEffect(() => {
+    const updateCount = () => {
+      const dynamicStored = localStorage.getItem('NARA_DYNAMIC_KNOWLEDGE');
+      const knowledge = dynamicStored ? JSON.parse(dynamicStored) : [];
+      setVectorCount(knowledge.length);
+    };
+
+    updateCount();
+    window.addEventListener('storage', updateCount);
+    return () => window.removeEventListener('storage', updateCount);
+  }, []);
+
   return (
     <div className="h-full flex flex-col bg-slate-900 text-slate-300 border-r border-slate-800">
       <div className="p-6">
@@ -19,65 +33,56 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
           </div>
           <div>
             <h2 className="text-lg font-bold text-white tracking-tight">Nara System</h2>
-            <p className="text-[10px] text-indigo-400 font-mono uppercase font-bold">Version 2.1.0 Stable</p>
+            <p className="text-[10px] text-indigo-400 font-mono uppercase font-bold">Pilot Mode v2.8</p>
           </div>
         </div>
 
         <nav className="space-y-6">
           <section>
-            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Navegación</h3>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 px-2">Navegación</h3>
             <div className="space-y-1">
               <button 
                 onClick={() => setActiveView('chat')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeView === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/10' : 'hover:bg-slate-800 text-slate-400'}`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${activeView === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'hover:bg-slate-800 text-slate-400'}`}
               >
                 <Activity size={16} /> Centro de Soporte
               </button>
               <button 
-                onClick={() => setActiveView('setup')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeView === 'setup' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/10' : 'hover:bg-slate-800 text-slate-400'}`}
+                onClick={() => setActiveView('knowledge')}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${activeView === 'knowledge' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'hover:bg-slate-800 text-slate-400'}`}
               >
-                <Settings size={16} /> Panel de Infraestructura
+                <BookOpen size={16} /> Knowledge Hub
+              </button>
+              <button 
+                onClick={() => setActiveView('setup')}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${activeView === 'setup' ? 'bg-slate-800 text-white' : 'hover:bg-slate-800 text-slate-400'}`}
+              >
+                <Settings size={16} /> Panel de Control
               </button>
             </div>
           </section>
 
           <section>
-            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center px-2">
               <Server size={12} className="mr-2"/> Status Real-time
             </h3>
             <div className="space-y-3">
-              <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+              <div className="bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2 text-xs text-slate-300 font-medium">
-                    <Github size={14} className="text-slate-400" /> Git Source
+                    <Database size={14} className="text-blue-400" /> Vector Hub
                   </div>
-                  <span className="w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+                  <span className="text-[10px] font-mono text-blue-400 font-bold">{vectorCount} Docs</span>
                 </div>
-                <div className="text-[9px] font-mono text-slate-500 flex items-center gap-1">
-                  <GitBranch size={10} /> main (stable/checkpoint)
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                   <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Active Index</span>
                 </div>
               </div>
 
-              <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-slate-400">Database</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[8px] text-green-400 font-bold">READY</span>
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                  </div>
-                </div>
-                <div className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
-                  <Database size={10} /> pgvector-v16
-                </div>
-              </div>
-
-              <div className="bg-indigo-900/10 p-3 rounded-xl border border-indigo-500/20">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-indigo-300 font-bold">Core Status</span>
-                  <CheckCircle size={10} className="text-indigo-400" />
-                </div>
-                <p className="text-[9px] text-slate-500 font-medium">Arquitectura 2.1 Verificada.</p>
+              <div className="bg-indigo-900/10 p-3 rounded-xl border border-indigo-500/20 flex items-center justify-between">
+                <span className="text-[10px] text-indigo-300 font-bold uppercase">RAG Engine</span>
+                <CheckCircle size={10} className="text-indigo-400" />
               </div>
             </div>
           </section>
@@ -86,10 +91,10 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
 
       <div className="mt-auto p-6 border-t border-slate-800 bg-slate-900/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white">TI</div>
+          <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">TI</div>
           <div>
-            <div className="text-xs font-bold text-white">Admin Global</div>
-            <div className="text-[10px] text-slate-500">Región: Corporativa</div>
+            <div className="text-xs font-bold text-white">Admin Piloto</div>
+            <div className="text-[9px] text-slate-500 font-mono uppercase tracking-tighter">Acceso: Root</div>
           </div>
         </div>
       </div>

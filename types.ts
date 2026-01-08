@@ -1,9 +1,11 @@
+
 export interface Fuente {
   doc_id: string;
   titulo: string;
   seccion_o_clausula: string;
   fecha_version: string;
   score: number;
+  tipo_archivo?: 'pdf' | 'docx' | 'xlsx' | 'csv';
 }
 
 export interface Escalamiento {
@@ -43,11 +45,14 @@ export interface MockContextItem {
   fecha_version: string;
   texto: string;
   score: number;
+  tipo_archivo: 'pdf' | 'docx' | 'xlsx' | 'csv';
 }
 
 export interface AgentFile {
   uuid: string;
   name: string;
-  type?: string;
-  size?: number;
+  type: string;
+  size: number;
+  status: 'indexing' | 'ready' | 'error';
+  uploadDate: string;
 }
