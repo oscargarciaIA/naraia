@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Sparkles, AlertTriangle, RefreshCw } from 'lucide-react';
 import MessageBubble from './MessageBubble';
@@ -16,7 +17,7 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{
       id: 'welcome', role: 'assistant', timestamp: new Date(),
       content: { 
-        respuesta_usuario: "Hola, soy Nara. Estoy aquí para asistirte con normativas de TI, licenciamiento y acceso a recursos corporativos. ¿En qué puedo ayudarte hoy?", 
+        respuesta_usuario: "Hola, soy Nara v2.0. Estoy aquí para asistirte con normativas de TI, licenciamiento y acceso a recursos corporativos. Mi núcleo ha sido verificado. ¿En qué puedo ayudarte hoy?", 
         fuentes: [],
         nota_compliance: "Toda interacción está sujeta a la Política de Uso Aceptable de Activos.",
         accion: "responder",
@@ -65,7 +66,7 @@ const Chat: React.FC = () => {
       }]);
     } catch (err) {
       console.error(err);
-      setError("No se pudo conectar con el núcleo de Nara. Verifique la API Key o la conexión corporativa.");
+      setError("No se pudo conectar con el núcleo de Nara v2.0. Verifique la API Key o la conexión de red.");
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +74,6 @@ const Chat: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#f8fafc]">
-      {/* Área de Mensajes */}
       <div className="flex-1 overflow-y-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
             {messages.map(m => <MessageBubble key={m.id} message={m} />)}
@@ -81,9 +81,9 @@ const Chat: React.FC = () => {
             {isLoading && (
               <div className="flex items-center gap-3 text-indigo-500 animate-pulse ml-4">
                 <div className="bg-indigo-100 p-2 rounded-lg">
-                   <Sparkles size={18} className="animate-spin-slow" />
+                   <Sparkles size={18} />
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-widest">Nara está consultando el Knowledge Hub...</span>
+                <span className="text-xs font-semibold uppercase tracking-widest">Nara v2.0 procesando consulta...</span>
               </div>
             )}
 
@@ -102,7 +102,6 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
-      {/* Input y Sugerencias */}
       <div className="bg-white border-t border-slate-200 p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
         <div className="max-w-4xl mx-auto">
             {messages.length < 3 && !isLoading && (
@@ -139,8 +138,8 @@ const Chat: React.FC = () => {
               <span className="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">
                 AES-256 encrypted session
               </span>
-              <span className="text-[10px] text-slate-400">
-                Nara AI v1.2.0 • Multinational IT Support
+              <span className="text-[10px] text-slate-400 font-bold uppercase">
+                Nara Core v2.0.0 • Punto de Control Estable
               </span>
             </div>
         </div>

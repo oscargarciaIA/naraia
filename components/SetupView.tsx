@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { 
-  Check, Server, Zap, Terminal, Database, Cpu, Activity, LayoutDashboard, RefreshCw, Layers, ShieldCheck, HardDrive, Globe
+  Check, Server, Zap, Terminal, Database, Activity, LayoutDashboard, RefreshCw, ShieldCheck, HardDrive, Globe, AlertCircle
 } from 'lucide-react';
 
 const SetupView: React.FC = () => {
@@ -13,118 +13,152 @@ const SetupView: React.FC = () => {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const syncScript = {
-    name: "Nara_Prod_Sync_v2.0.ps1",
-    desc: "SINCRONIZACIÓN LOCAL: Úsalo cuando hagas cambios en el código y no los veas reflejados en el puerto 3000. Recrea los volúmenes sin borrar la DB.",
-    code: `# Nara_Prod_Sync_v20.ps1
-Write-Host "--- NARA PRODUCTION SYNC v2.0 ---" -ForegroundColor Cyan
+  const checkpointScript = {
+    name: "Nara_Control_v2.0.ps1",
+    desc: "SCRIPT DE CONTROL TOTAL: Este es el motor de despliegue oficial. Limpia procesos colgados, purga el sistema Docker y reconstruye Nara desde cero para garantizar estabilidad absoluta.",
+    code: `# Nara_Control_v2.0.ps1
+Write-Host "--- NARA SYSTEM CHECKPOINT v2.0 ---" -ForegroundColor Cyan -BackgroundColor Black
 
-Write-Host "[1/3] Detectando cambios en archivos locales..." -ForegroundColor Gray
-# Forzamos la reconstrucción solo del frontend para ahorrar tiempo
-docker-compose up -d --build nara-app
+# 1. LIMPIEZA DE PROCESOS HUÉRFANOS EN WINDOWS
+Write-Host "[1/5] Liberando puertos y procesos (Node/Vite)..." -ForegroundColor Gray
+Get-Process | Where-Object { $_.ProcessName -match "node|vite" } | Stop-Process -Force -ErrorAction SilentlyContinue
 
-Write-Host "[2/3] Limpiando cache de Vite en el contenedor..." -ForegroundColor Gray
-docker exec nara_frontend rm -rf node_modules/.vite
+# 2. DETENCIÓN TOTAL DE DOCKER
+Write-Host "[2/5] Deteniendo contenedores activos..." -ForegroundColor Gray
+$containers = docker ps -q
+if ($containers) { docker stop $containers }
 
-Write-Host "[3/3] Reiniciando servicio de aplicación..." -ForegroundColor Gray
-docker-compose restart nara-app
+# 3. PURGA DE SISTEMA (Punto de partida limpio)
+Write-Host "[3/5] Ejecutando purga total de volúmenes y red..." -ForegroundColor Yellow
+docker system prune -a --volumes -f
+
+# 4. RE-ESTABLECIMIENTO DE INFRAESTRUCTURA
+$composeFile = @"
+services:
+  nara-vector-db:
+    image: pgvector/pgvector:pg16
+    container_name: nara_vector_engine
+    restart: always
+    environment:
+      - POSTGRES_USER=nara_admin
+      - POSTGRES_PASSWORD=nara_secure_2024
+      - POSTGRES_DB=nara_knowledge_hub
+    ports:
+      - '5432:5432'
+    networks:
+      - nara_network
+  nara-app:
+    build: .
+    container_name: nara_frontend
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      - API_KEY=\${env:API_KEY}
+    depends_on:
+      - nara-vector-db
+    networks:
+      - nara_network
+networks:
+  nara_network:
+    driver: bridge
+"@
+Set-Content -Path "docker-compose.yml" -Value $composeFile
+
+# 5. DESPLIEGUE v2.0
+Write-Host "[5/5] Levantando entorno Nara v2.0.0..." -ForegroundColor Cyan
+docker-compose up -d --build
 
 Write-Host "-------------------------------------------" -ForegroundColor Green
-Write-Host "✅ SINCRONIZACIÓN EXITOSA. REFRESCAR NAVEGADOR." -ForegroundColor White`
+Write-Host "✅ SISTEMA v2.0 ONLINE EN http://localhost:3000" -ForegroundColor White`
   };
 
   return (
     <div className="flex flex-col h-full bg-slate-950 p-8 overflow-y-auto font-sans text-slate-300">
       <div className="max-w-5xl mx-auto w-full space-y-6 pb-12">
         
-        {/* HEADER v2.0 */}
-        <header className="flex items-center justify-between bg-indigo-900/20 p-8 rounded-[2.5rem] border border-indigo-500/20 backdrop-blur-xl shadow-2xl">
+        {/* HEADER CONTROL PANEL */}
+        <header className="flex items-center justify-between bg-slate-900/40 p-8 rounded-[2rem] border border-slate-800 backdrop-blur-md shadow-xl">
           <div className="flex items-center gap-6">
-            <div className="p-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl text-white shadow-lg shadow-indigo-500/20">
-              <LayoutDashboard size={32} />
+            <div className="p-4 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
+              <ShieldCheck size={32} />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white tracking-tight">Nara System v2.0</h2>
+              <h2 className="text-3xl font-black text-white tracking-tight uppercase">Control Center v2.0</h2>
               <div className="flex items-center gap-2 mt-1">
-                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                 <p className="text-xs text-indigo-300 font-bold uppercase tracking-widest">Estado: Operacional • Checkpoint Alpha</p>
+                 <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Estado: Punto de Control Verificado</p>
               </div>
             </div>
           </div>
-          <div className="hidden lg:flex gap-4">
-             <div className="text-right">
-                <p className="text-[10px] text-slate-500 font-bold uppercase">Uptime</p>
-                <p className="text-sm font-mono text-white">99.9%</p>
-             </div>
-             <div className="w-[1px] bg-slate-800"></div>
-             <div className="text-right">
-                <p className="text-[10px] text-slate-500 font-bold uppercase">Engine</p>
-                <p className="text-sm font-mono text-white">Gemini 3 Pro</p>
-             </div>
+          <div className="text-right border-l border-slate-800 pl-6">
+            <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Build ID</p>
+            <p className="text-sm font-mono text-indigo-400">STABLE-2024-V2</p>
           </div>
         </header>
 
-        {/* STATUS TILES */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Network', val: '172.18.0.0/16', icon: Globe, color: 'text-blue-400' },
-            { label: 'Frontend', val: 'Port 3000', icon: Activity, color: 'text-green-400' },
-            { label: 'Vector DB', val: 'PostgreSQL 16', icon: Database, color: 'text-purple-400' },
-            { label: 'Storage', val: 'Persistent Vol', icon: HardDrive, color: 'text-amber-400' }
-          ].map((item, i) => (
-            <div key={i} className="bg-slate-900/50 border border-slate-800 p-5 rounded-3xl flex items-center gap-4">
-               <item.icon size={20} className={item.color} />
-               <div>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{item.label}</p>
-                  <p className="text-xs text-white font-mono">{item.val}</p>
-               </div>
+        {/* INDICADORES DE SISTEMA */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex items-center gap-4">
+            <Activity className="text-blue-400" size={24} />
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase">Uptime Sistema</p>
+              <p className="text-lg font-mono text-white">100% Stable</p>
             </div>
-          ))}
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex items-center gap-4">
+            <Database className="text-purple-400" size={24} />
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase">Base de Datos</p>
+              <p className="text-lg font-mono text-white">PGVector Active</p>
+            </div>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex items-center gap-4">
+            <Globe className="text-green-400" size={24} />
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase">Endpoint TI</p>
+              <p className="text-lg font-mono text-white">:3000</p>
+            </div>
+          </div>
         </div>
 
-        {/* SYNC PANEL */}
-        <div className="bg-slate-900 rounded-[2rem] border border-slate-800 overflow-hidden shadow-xl">
-          <div className="p-8 border-b border-slate-800 bg-slate-900/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Layers size={18} className="text-indigo-400" />
-                <h3 className="text-xl font-bold text-white tracking-tight">Production Hot-Sync</h3>
+        {/* SCRIPT DE DESPLIEGUE v2.0 */}
+        <div className="bg-slate-900 rounded-[2rem] border border-slate-800 overflow-hidden shadow-2xl">
+          <div className="p-8 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Terminal size={20} className="text-indigo-400" />
+                <h3 className="text-xl font-bold text-white tracking-tight">Script de Control de Infraestructura</h3>
               </div>
-              <p className="text-sm text-slate-400 max-w-md">Si tus cambios locales no aparecen en la web, usa este script para sincronizar los archivos con el contenedor.</p>
+              <p className="text-sm text-slate-400 max-w-xl">{checkpointScript.desc}</p>
             </div>
             <button 
-              onClick={() => copyToClipboard(syncScript.code, "sync")}
-              className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-sm font-black transition-all shadow-xl active:scale-95 whitespace-nowrap ${copied === "sync" ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-indigo-500/20'}`}
+              onClick={() => copyToClipboard(checkpointScript.code, "v2")}
+              className={`flex items-center gap-3 px-10 py-5 rounded-2xl text-sm font-black transition-all shadow-xl active:scale-95 whitespace-nowrap ${copied === "v2" ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-indigo-500/30'}`}
             >
-              {copied === "sync" ? <Check size={18}/> : <RefreshCw size={18}/>}
-              {copied === "sync" ? '¡Sincronizador Copiado!' : 'Copiar Script de Sincronización'}
+              {copied === "v2" ? <Check size={20}/> : <Zap size={20}/>}
+              {copied === "v2" ? 'SCRIPT COPIADO' : 'COPIAR SCRIPT v2.0'}
             </button>
           </div>
-          <div className="p-8">
-            <pre className="bg-black p-8 rounded-3xl font-mono text-xs text-indigo-300 overflow-x-auto border border-indigo-900/20 leading-relaxed shadow-inner">
-              {syncScript.code}
-            </pre>
+          <div className="p-8 bg-slate-950/50">
+            <div className="relative">
+              <pre className="bg-black p-8 rounded-3xl font-mono text-[11px] text-indigo-300 overflow-x-auto border border-indigo-900/10 leading-relaxed shadow-inner">
+                {checkpointScript.code}
+              </pre>
+            </div>
           </div>
         </div>
 
-        {/* INFRASTRUCTURE MONITOR */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="bg-slate-900 p-8 rounded-[2rem] border border-slate-800 space-y-4">
-              <h4 className="font-bold text-white flex items-center gap-2">
-                 <ShieldCheck size={18} className="text-green-500" /> Seguridad de Datos
-              </h4>
-              <p className="text-xs text-slate-400">Toda la comunicación entre el asistente y pgvector se realiza a través de la red aislada <code>nara_network</code>. Los datos nunca salen del entorno Docker sin encriptación TLS.</p>
-           </div>
-           <div className="bg-slate-900 p-8 rounded-[2rem] border border-slate-800 space-y-4">
-              <h4 className="font-bold text-white flex items-center gap-2">
-                 <Terminal size={18} className="text-amber-500" /> Consola de Auditoría
-              </h4>
-              <p className="text-xs text-slate-400">Los logs del sistema v2.0 ahora registran cada consulta semántica para mejorar el score de precisión del Knowledge Hub.</p>
-           </div>
+        {/* ADVERTENCIA DE CUMPLIMIENTO */}
+        <div className="bg-amber-900/10 border border-amber-900/30 p-6 rounded-2xl flex gap-4 items-start">
+           <AlertCircle className="text-amber-500 shrink-0" size={20} />
+           <p className="text-xs text-amber-200/70 leading-relaxed">
+             <strong>Aviso de Seguridad TI:</strong> El uso del script de control v2.0 realiza una purga de volúmenes de Docker. Asegúrese de que los datos persistentes en PostgreSQL estén correctamente sincronizados o respaldados antes de una purga total del sistema.
+           </p>
         </div>
 
         <footer className="text-center py-8">
-           <p className="text-[10px] text-slate-600 uppercase tracking-[0.4em] font-bold">Nara Core Infrastructure • v2.0.0 Stable</p>
+           <p className="text-[10px] text-slate-600 uppercase tracking-[0.6em] font-black">Nara Core Framework • Checkpoint v2.0.0 Stable</p>
         </footer>
 
       </div>
