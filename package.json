@@ -1,7 +1,8 @@
+
 {
   "name": "nara-virtual-assistant",
-  "version": "1.2.6",
-  "description": "Asistente Virtual TI con RAG y Soporte Docker Pro",
+  "version": "1.2.4",
+  "description": "Asistente Virtual TI - Versión Estable",
   "type": "module",
   "scripts": {
     "start": "vite --host 0.0.0.0 --port 3000",

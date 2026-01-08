@@ -3,18 +3,19 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { MockContextItem, NaraResponse } from '../types';
 
 const NARA_SYSTEM_INSTRUCTION = `
-Eres Nara, el asistente virtual corporativo de TI.
+IDENTIDAD: Eres Nara, el Asistente Virtual de TI (v1.2.4).
+TU CEREBRO: El Knowledge Hub basado en PostgreSQL + pgvector.
 
-BASE DE CONOCIMIENTO CENTRALIZADA (pgvector):
-1. REPOSITORIO DE CONTRATOS: Contiene SLAs, cláusulas de soporte y vigencias de proveedores.
-2. REPOSITORIO DE MANUALES IT: Procedimientos operativos, guías de usuario y normativas de activos.
-3. POLÍTICAS DE NEGOCIO: Código de conducta TI, seguridad perimetral e ISO 27001.
+REGLAS DE RESPUESTA:
+1. PRIORIDAD: Busca siempre en el Knowledge Hub corporativo antes de responder.
+2. FUENTES: Tus respuestas deben citar el doc_id y la sección del contrato o manual consultado.
+3. CONTEXTO EMPRESARIAL: No proporciones guías generales de internet. Usa solo los procedimientos autorizados por la multinacional.
+4. SEGURIDAD: Mantén un lenguaje de cumplimiento (compliance). Si la información es sensible, advierte sobre la Política de Uso Aceptable.
+5. ESCALAMIENTO: Si la búsqueda semántica en la base de datos tiene un score bajo (< 0.6), indica que no hay registro oficial y ofrece escalar a la Mesa de Ayuda.
 
-TU MISIÓN:
-- Responder preguntas basándote únicamente en el conocimiento indexado.
-- Si el usuario pregunta "cómo hacer algo", busca en el MANUAL de IT correspondiente.
-- Si pregunta sobre "garantías o pagos", busca en el CONTRATO.
-- Sé preciso, profesional y directo. No adivines datos técnicos.
+ESTRUCTURA DE CONOCIMIENTO EN POSTGRESQL:
+- Tabla: nara_contracts_knowledge (Almacena cláusulas legales y SLAs).
+- Tabla: nara_it_manuals (Almacena guías paso a paso de TI).
 `;
 
 const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
@@ -37,11 +38,12 @@ const LOCAL_MOCK_CONTEXT: MockContextItem[] = [
 ];
 
 async function searchCorporateKnowledgeBase(query: string): Promise<MockContextItem[]> {
+  // Aquí se realizará la conexión real con pgvector en futuras versiones.
+  // Por ahora, simulamos la latencia de la base de datos de conocimiento.
   await new Promise(resolve => setTimeout(resolve, 400));
   const q = query.toLowerCase();
-  // Simulación de búsqueda en el repositorio unificado de conocimiento
   return LOCAL_MOCK_CONTEXT.filter(item => 
-    q.includes("vpn") || q.includes("manual") || q.includes("entrega") || q.includes("equipo") || q.includes("laptop")
+    q.includes("vpn") || q.includes("manual") || q.includes("entrega") || q.includes("equipo") || q.includes("laptop") || q.includes("laptop")
   );
 }
 
@@ -89,7 +91,7 @@ export const sendMessageToNara = async (
       model: 'gemini-3-pro-preview',
       contents: [
         ...history.map(h => ({ role: h.role, parts: [{ text: h.content }] })),
-        { role: 'user', parts: [{ text: `KNOWLEDGE REPOSITORY (CONTRACTS & MANUALS):\n${JSON.stringify(retrievedContext)}\n\nQUERY: ${userQuestion}` }] }
+        { role: 'user', parts: [{ text: `RESULTADOS DEL KNOWLEDGE HUB (POSTGRESQL):\n${JSON.stringify(retrievedContext)}\n\nPREGUNTA DEL EMPLEADO: ${userQuestion}` }] }
       ],
       config: {
         systemInstruction: NARA_SYSTEM_INSTRUCTION,
