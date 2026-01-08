@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v3.0.0 PROD",
-  "description": "Versión Final Pilot: Motor de ingesta real y razonamiento de grado corporativo mediante Gemini 3 Pro.",
+  "name": "Nara - Asistente Virtual TI v3.0.0",
+  "description": "Versión de Producción: Motor RAG mejorado con script de despliegue v2.0 verificado.",
   "version": "3.0.0",
   "requestFramePermissions": []
 }

@@ -17,9 +17,9 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{
       id: 'welcome', role: 'assistant', timestamp: new Date(),
       content: { 
-        respuesta_usuario: "Bienvenido al Canal Oficial de Nara v3.0. He sincronizado la base de conocimiento de TI para este piloto. Puedo asistirte con manuales, SLAs y gestión de recursos. ¿Cuál es tu requerimiento?", 
+        respuesta_usuario: "Bienvenido al Canal Oficial de Nara v3.0. Motor de datos mejorado y sincronizado. Puedo asistirte con manuales reales y gestión de recursos TI. ¿En qué puedo ayudarte?", 
         fuentes: [],
-        nota_compliance: "Sesión monitoreada bajo estándares ISO 27001.",
+        nota_compliance: "Sesión monitoreada bajo estándares corporativos TI.",
         accion: "responder",
         nivel_confianza: 1,
         escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null },
@@ -66,7 +66,7 @@ const Chat: React.FC = () => {
       }]);
     } catch (err) {
       console.error(err);
-      setError("Error de Sincronización: El núcleo Nara no responde. Verifica la API_KEY en tu Docker Desktop.");
+      setError("Falla de Conexión: Verifica tu API_KEY en el entorno Docker.");
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +83,7 @@ const Chat: React.FC = () => {
                 <div className="bg-indigo-100 p-2 rounded-lg">
                    <Sparkles size={18} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-widest">Nara v3.0 analizando manuales...</span>
+                <span className="text-xs font-bold uppercase tracking-widest">Nara analizando conocimiento real...</span>
               </div>
             )}
 
@@ -91,7 +91,7 @@ const Chat: React.FC = () => {
               <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-3 text-amber-700 animate-fade-in-up">
                 <AlertTriangle size={20} />
                 <div className="flex-1">
-                   <p className="text-sm font-bold uppercase tracking-tighter">Falla de Núcleo</p>
+                   <p className="text-sm font-bold uppercase tracking-tighter">Error de Núcleo</p>
                    <p className="text-xs opacity-80">{error}</p>
                 </div>
                 <button onClick={() => handleSend(messages[messages.length-1].content as string)} className="p-2 hover:bg-amber-100 rounded-lg transition-colors">
@@ -136,8 +136,8 @@ const Chat: React.FC = () => {
             </div>
             
             <div className="flex justify-between items-center px-2 mt-4 opacity-40">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Pilot Sync Active</span>
-              <span className="text-[9px] font-bold uppercase">Nara Core Production v3.0.0</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Deploy: Checkpoint v2.0</span>
+              <span className="text-[9px] font-bold uppercase">Nara Core v3.0.0</span>
             </div>
         </div>
       </div>

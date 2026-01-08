@@ -3,15 +3,13 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { MockContextItem, NaraResponse } from '../types';
 
 const NARA_SYSTEM_INSTRUCTION = `
-IDENTIDAD: Eres Nara, el Asistente Virtual Oficial de TI de la multinacional.
-COMPORTAMIENTO: Profesional, ejecutivo, preciso y estrictamente basado en datos.
+IDENTIDAD: Eres Nara, el Asistente Virtual Oficial de TI.
+MISIÓN: Responder basándote estrictamente en el "CONTEXTO DE DOCUMENTOS" proporcionado.
 
-PROTOCOLO DE RESPUESTA PARA PRODUCCIÓN:
-1. FUENTES: Utiliza EXCLUSIVAMENTE la información proporcionada en "CONTEXTO DE DOCUMENTOS". 
-2. CITACIÓN: Al final de tu respuesta, menciona el nombre del archivo del cual extrajiste la información.
-3. ALUCINACIÓN: Si la información no está en los documentos, responde: "Lamentablemente, no cuento con información oficial sobre ese tema en mi base de conocimientos actual. ¿Deseas que escale tu consulta a un especialista?"
-4. SEGURIDAD: Nunca reveles contraseñas ni vulnerabilidades si llegaran a estar en el texto.
-5. ESCALAMIENTO: Si el usuario muestra urgencia o frustración, sugiere escalar a "Mesa de Ayuda".
+PROTOCOLO v2.0:
+1. Siempre cita la fuente de la información.
+2. Si el dato no está en el contexto, indica amablemente que no tienes registro oficial pero puedes escalar el caso.
+3. Mantén un tono técnico y profesional.
 `;
 
 async function searchKnowledgeHub(query: string): Promise<MockContextItem[]> {
@@ -21,13 +19,12 @@ async function searchKnowledgeHub(query: string): Promise<MockContextItem[]> {
 
   if (fullKnowledge.length === 0) return [];
 
-  // En producción (piloto), si el volumen de datos es manejable (< 100k chars), inyectamos todo para máxima precisión.
+  // Modo Sincronizado v2.0: Inyectar todo si es < 100k caracteres
   const totalTextLength = fullKnowledge.reduce((acc, curr) => acc + curr.texto.length, 0);
   if (totalTextLength < 100000) {
     return fullKnowledge.map(k => ({ ...k, score: 1.0 }));
   }
 
-  // Si excede, usamos un buscador de relevancia por tokens
   return fullKnowledge.map(item => {
     let score = 0;
     const tokens = q.split(/\s+/).filter(t => t.length > 2);
@@ -81,8 +78,6 @@ export const sendMessageToNara = async (
 ): Promise<NaraResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const retrievedContext = await searchKnowledgeHub(userQuestion);
-  
-  // Obtenemos los nombres de todos los archivos para el prompt
   const catalog = retrievedContext.map(c => c.titulo).join(' | ');
 
   const response = await ai.models.generateContent({
@@ -93,11 +88,9 @@ export const sendMessageToNara = async (
         role: 'user', 
         parts: [{ 
           text: `
-          CONTEXTO DISPONIBLE (ARCHIVOS): ${catalog || 'NULO'}
-          CONTENIDO DETALLADO PARA ANALIZAR:
-          ${JSON.stringify(retrievedContext)}
-          
-          CONSULTA DEL USUARIO: ${userQuestion}
+          CONTEXTO v2.0: ${catalog || 'SIN DOCUMENTOS'}
+          DATOS: ${JSON.stringify(retrievedContext)}
+          PREGUNTA: ${userQuestion}
           ` 
         }] 
       }
@@ -106,7 +99,7 @@ export const sendMessageToNara = async (
       systemInstruction: NARA_SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
       responseSchema: NARA_SCHEMA,
-      temperature: 0.1, // Baja temperatura para respuestas factuales
+      temperature: 0.1,
     },
   });
   
