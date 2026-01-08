@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   nara-vector-db:
     image: pgvector/pgvector:pg16
@@ -24,6 +23,7 @@ services:
       - nara-vector-db
     networks:
       - nara_network
+
 networks:
   nara_network:
     driver: bridge
