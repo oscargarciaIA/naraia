@@ -1,3 +1,4 @@
+
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -7,6 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
+      'process.env.AGENT_ID': JSON.stringify(env.AGENT_ID || process.env.AGENT_ID),
       'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY),
       'process.env.REACT_APP_AGENT_API_URL': JSON.stringify(env.REACT_APP_AGENT_API_URL || '')
     },

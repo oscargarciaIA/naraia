@@ -3,7 +3,7 @@ export interface Fuente {
   doc_id: string;
   titulo: string;
   seccion_o_clausula: string;
-  fecha_version: string;
+  fecha_version?: string;
   score: number;
   tipo_archivo?: 'pdf' | 'docx' | 'xlsx' | 'csv';
 }
@@ -18,6 +18,7 @@ export interface Escalamiento {
 
 export interface NaraResponse {
   respuesta_usuario: string;
+  chatId?: string; // Persistencia de sesión Plai
   preguntas_aclaratorias: string[];
   accion: 'responder' | 'buscar_vector' | 'consultar_motor' | 'escalar_mesa' | 'escalar_mail';
   nivel_confianza: number;
@@ -38,21 +39,21 @@ export interface AgentConfig {
   apiKey: string;
 }
 
+export interface AgentFile {
+  uuid: string;
+  name: string;
+  type: string;
+  size: number;
+  status: 'ready' | 'processing' | 'error';
+  uploadDate: string;
+}
+
 export interface MockContextItem {
   doc_id: string;
   titulo: string;
   seccion_o_clausula: string;
   fecha_version: string;
   texto: string;
-  score: number;
-  tipo_archivo: 'pdf' | 'docx' | 'xlsx' | 'csv';
-}
-
-export interface AgentFile {
-  uuid: string;
-  name: string;
-  type: string;
-  size: number;
-  status: 'indexing' | 'ready' | 'error';
-  uploadDate: string;
+  score?: number;
+  tipo_archivo?: 'pdf' | 'docx' | 'xlsx' | 'csv';
 }

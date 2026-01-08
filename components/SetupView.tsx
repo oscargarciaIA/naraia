@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, Terminal, Activity, Zap, Database, Server
+  ShieldCheck, Terminal, Activity, Zap, Database, Server, RefreshCcw, Key
 } from 'lucide-react';
 
 const SetupView: React.FC = () => {
@@ -13,41 +13,33 @@ const SetupView: React.FC = () => {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const v2ControlScript = {
-    name: "Nara_Control_v2.0.ps1",
-    desc: "SCRIPT DE CONTROL v2.0: Utiliza este script para sincronizar el Docker sin errores de infraestructura.",
-    code: `# Nara_Control_v2.0.ps1
-Write-Host "--- NARA SYSTEM CHECKPOINT v2.0 ---" -ForegroundColor Cyan -BackgroundColor Black
+  const v3ControlScript = {
+    name: "Nara_Plai_Setup_v3.0.ps1",
+    desc: "SCRIPT MAESTRO v3.0: Despliegue con integración de Plai Assistant API.",
+    code: `# Nara_Plai_Setup_v3.0.ps1
+Write-Host "--- NARA SYSTEM BASELINE v3.0 (PLAI EDITION) ---" -ForegroundColor Cyan -BackgroundColor Black
 
-# 1. LIMPIEZA DE PROCESOS HUÉRFANOS EN WINDOWS
-Write-Host "[1/6] Liberando puertos y procesos (Node/Vite)..." -ForegroundColor Gray
+# 0. VALIDACIÓN DE CREDENCIALES PLAI
+if (-not $env:AGENT_ID) {
+    Write-Host "[!] REQUERIDO: Ingrese el ID del Agente Plai." -ForegroundColor Yellow
+    $userInputAgent = Read-Host "x-agent-id"
+    if (-not $userInputAgent) { exit }
+    $env:AGENT_ID = $userInputAgent
+}
+
+if (-not $env:API_KEY) {
+    Write-Host "[!] REQUERIDO: Ingrese la API Key de Plai." -ForegroundColor Yellow
+    $userInputKey = Read-Host "x-api-key"
+    if (-not $userInputKey) { exit }
+    $env:API_KEY = $userInputKey
+}
+
+# 1. LIMPIEZA
+Write-Host "[1/6] Liberando recursos..." -ForegroundColor Gray
 Get-Process | Where-Object { $_.ProcessName -match "node|vite" } | Stop-Process -Force -ErrorAction SilentlyContinue
 
-# 2. CREACIÓN DE ARCHIVOS DE CONFIGURACIÓN (Evitando errores de encoding)
-Write-Host "[2/6] Generando archivos de configuración de infraestructura..." -ForegroundColor Gray
-
-$dockerfile = @"
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "run", "start"]
-"@
-# Guardar con codificación UTF8 explícita para evitar caracteres invisibles
-[System.IO.File]::WriteAllLines("$(Get-Location)/Dockerfile", $dockerfile)
-
-$dockerignore = @"
-node_modules
-dist
-.git
-Dockerfile
-docker-compose.yml
-.env
-"@
-[System.IO.File]::WriteAllLines("$(Get-Location)/.dockerignore", $dockerignore)
+# 2. GENERACIÓN DE DOCKER-COMPOSE DINÁMICO
+Write-Host "[2/6] Configurando variables de entorno Plai..." -ForegroundColor Gray
 
 $composeFile = @"
 services:
@@ -70,7 +62,8 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - API_KEY=\${env:API_KEY}
+      - AGENT_ID=$($env:AGENT_ID)
+      - API_KEY=$($env:API_KEY)
     depends_on:
       - nara-vector-db
     networks:
@@ -81,54 +74,73 @@ networks:
 "@
 [System.IO.File]::WriteAllLines("$(Get-Location)/docker-compose.yml", $composeFile)
 
-# 3. DETENCIÓN TOTAL DE DOCKER
-Write-Host "[3/6] Deteniendo contenedores activos..." -ForegroundColor Gray
-$containers = docker ps -q
-if ($containers) { docker stop $containers }
+# 3. REINICIO DE CONTENEDORES
+Write-Host "[3/6] Deteniendo infraestructura previa..." -ForegroundColor Gray
+docker-compose down --remove-orphans
 
-# 4. PURGA DE SISTEMA
-Write-Host "[4/6] Ejecutando purga de volúmenes obsoletos..." -ForegroundColor Yellow
-docker system prune -a --volumes -f
-
-# 5. DESPLIEGUE v2.0
-Write-Host "[5/6] Levantando entorno Nara v2.0.0..." -ForegroundColor Cyan
+# 4. DESPLIEGUE FINAL
+Write-Host "[5/6] Levantando entorno Nara v3.0.0 (Powered by Plai)..." -ForegroundColor Cyan
 docker-compose up -d --build
 
 Write-Host "-------------------------------------------" -ForegroundColor Green
-Write-Host "? SISTEMA v2.0 ONLINE EN http://localhost:3000" -ForegroundColor White`
+Write-Host "SISTEMA v3.0 ONLINE EN http://localhost:3000" -ForegroundColor White`
   };
 
   return (
     <div className="flex flex-col h-full bg-[#0a0f1e] p-8 overflow-y-auto">
       <div className="max-w-5xl mx-auto w-full space-y-6 pb-12">
-        <header className="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+        <header className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl">
           <div className="flex items-center gap-6">
-            <div className="p-4 bg-indigo-600 rounded-2xl">
+            <div className="p-4 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/20">
               <ShieldCheck size={40} className="text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-white tracking-tight">System Checkpoint v2.0</h2>
-              <p className="text-slate-400 text-sm font-medium mt-1">Infraestructura Verificada | Lógica de Datos v3.0</p>
+              <h2 className="text-3xl font-bold text-white tracking-tight">Setup Plai Assistant v3.0</h2>
+              <p className="text-slate-400 text-sm font-medium mt-1">Configuración del Motor Corporativo Multinacional</p>
             </div>
           </div>
         </header>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center gap-4">
+             <Activity className="text-green-400" />
+             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status: <span className="text-white">DOCKER READY</span></div>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center gap-4">
+             <Key className="text-indigo-400" />
+             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Auth: <span className="text-white">PLAI Assistant</span></div>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center gap-4">
+             <Zap className="text-amber-400" />
+             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Core: <span className="text-white">Corporate Engine</span></div>
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
           <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-800/20">
             <div className="flex items-center gap-3">
               <Terminal size={18} className="text-indigo-400" />
-              <span className="text-sm font-bold text-white uppercase tracking-wider">{v2ControlScript.name}</span>
+              <span className="text-sm font-bold text-white uppercase tracking-wider">{v3ControlScript.name}</span>
             </div>
             <button 
-              onClick={() => copyToClipboard(v2ControlScript.code, "v2")}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${copied === "v2" ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}
+              onClick={() => copyToClipboard(v3ControlScript.code, "v3")}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${copied === "v3" ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}
             >
-              {copied === "v2" ? 'COPIADO' : 'COPIAR SCRIPT v2.0'}
+              {copied === "v3" ? 'COPIADO' : 'COPIAR SCRIPT'}
             </button>
           </div>
           <div className="p-8 bg-black/40 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto">
-            <pre>{v2ControlScript.code}</pre>
+            <pre>{v3ControlScript.code}</pre>
           </div>
+        </div>
+        
+        <div className="bg-blue-900/20 border border-blue-500/30 p-6 rounded-2xl">
+           <h4 className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+             <Database size={14} /> Integración Plai
+           </h4>
+           <p className="text-slate-400 text-xs leading-relaxed">
+             Nara ahora utiliza el endpoint /assistant de Plai. Asegúrate de obtener el <span className="text-blue-400 font-bold">x-agent-id</span> y <span className="text-blue-400 font-bold">x-api-key</span> desde el panel de "Publicar" en la plataforma Plai.
+           </p>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 services:
   nara-vector-db:
     image: pgvector/pgvector:pg16
@@ -18,6 +19,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - AGENT_ID=${AGENT_ID}
       - API_KEY=${API_KEY}
     depends_on:
       - nara-vector-db

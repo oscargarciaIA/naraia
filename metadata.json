@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Asistente Virtual TI v3.0.0",
-  "description": "Versión de Producción: Motor RAG mejorado con script de despliegue v2.0 verificado.",
+  "name": "Nara - Sistema de Gestión TI v3.0.0",
+  "description": "Línea Base de Producción: Inteligencia Gemini 3 Pro con motor RAG de alta fidelidad.",
   "version": "3.0.0",
   "requestFramePermissions": []
 }

@@ -1,15 +1,15 @@
 
-# Nara - IT Virtual Assistant (v2.1.0 Global Checkpoint)
+# Nara - IT Virtual Management System (v3.0.0 Baseline)
 
-Este es el **Punto de Control Maestro v2.1.0**. Representa la base estable tras la verificación exitosa del despliegue en contenedores.
+Este es el **Punto de Partida Maestro v3.0.0**. Representa la arquitectura final consolidada y verificada para el entorno corporativo.
 
-## Estado del Sistema
-- **Núcleo**: Gemini 3 Pro (v2.1).
-- **Persistencia**: PostgreSQL + pgvector (Configurado).
-- **Despliegue**: Verificado mediante `Nara_Control_v2.0.ps1` (Encoding UTF8 Fixed).
+## Especificaciones del Sistema
+- **Core Engine**: Gemini 3 Pro (v3.0 Optimized).
+- **Data Engine**: RAG (Retrieval-Augmented Generation) sincronizado con Knowledge Hub.
+- **Infraestructura**: Despliegue mediante contenedores Docker (v16 Vector Engine).
 
-## Protocolo de Operación
-Nara opera bajo un esquema de respuesta técnica-corporativa. Este punto de control invalida cualquier configuración previa a la v2.0.
+## Control de Despliegue
+El sistema se despliega utilizando el script `Nara_Control_v3.0.ps1`, el cual garantiza la limpieza de puertos, purga de volúmenes y levantamiento automático de la red de servicios.
 
 ---
-*TI Department - Master Branch - 2024*
+*Área de TI - Multinacional - Rama Principal v3.0 - 2024*
