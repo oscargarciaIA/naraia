@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Punto de Control Maestro v3.7.1",
-  "description": "Edición de Traspaso Certificada. Incluye Script de Implementación Maestro, Runbook operativo y auditoría de seguridad para TI.",
-  "version": "3.7.1",
+  "name": "Nara - Punto de Control Maestro v3.7.2",
+  "description": "Edición de Traspaso Certificada. Script de Control v2.0 restaurado y validado para despliegue industrial.",
+  "version": "3.7.2",
   "requestFramePermissions": []
 }

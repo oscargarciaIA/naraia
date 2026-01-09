@@ -18,9 +18,9 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{
       id: 'welcome', role: 'assistant', timestamp: new Date(),
       content: { 
-        respuesta_usuario: "Bienvenido al Punto de Control v3.7.1 de Nara. Sistema sincronizado con el motor corporativo Plai (Cencosud AI). Estoy lista para asistirte con la documentación oficial de TI. ¿Cuál es tu consulta?", 
+        respuesta_usuario: "Bienvenido al Punto de Control v3.7.2 de Nara. Sistema sincronizado con el motor corporativo Plai. Script v2.0 restaurado y listo para operación. ¿Cuál es tu consulta?", 
         fuentes: [],
-        nota_compliance: "Sesión certificada bajo la línea base de producción v3.7.1 de Plai.",
+        nota_compliance: "Sesión certificada bajo la línea base v3.7.2 de Plai.",
         accion: "responder",
         nivel_confianza: 1,
         escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null },
@@ -74,12 +74,12 @@ const Chat: React.FC = () => {
       if (err.message === "API_KEY_MISSING") {
         setError({
           title: "Credenciales Plai Requeridas",
-          msg: "El Punto de Control 3.7.1 requiere llaves activas. Verifícalas en el Panel de Control."
+          msg: "El Punto de Control 3.7.2 requiere llaves activas."
         });
       } else {
         setError({
           title: "Error de Inferencia Plai",
-          msg: `Falla de red o autenticación: ${err.message}. Verifica los headers de autorización.`
+          msg: `Falla: ${err.message}. Verifique el enlace con Plai.`
         });
       }
     } finally {
@@ -98,7 +98,7 @@ const Chat: React.FC = () => {
                 <div className="bg-blue-100 p-2 rounded-lg">
                    <ShieldCheck size={18} />
                 </div>
-                <span className="text-xs font-black uppercase tracking-widest">Nara v3.7.1 procesando consulta...</span>
+                <span className="text-xs font-black uppercase tracking-widest">Nara v3.7.2 procesando...</span>
               </div>
             )}
 
@@ -111,9 +111,6 @@ const Chat: React.FC = () => {
                    <p className="text-xs font-black uppercase tracking-widest mb-1">{error.title}</p>
                    <p className="text-[11px] font-medium leading-relaxed opacity-80">{error.msg}</p>
                 </div>
-                <button onClick={() => handleSend(messages[messages.length-1].content as string)} className="p-2 hover:bg-red-100 rounded-lg transition-colors">
-                  <RefreshCw size={16} />
-                </button>
               </div>
             )}
             <div ref={bottomRef} className="h-4" />
@@ -122,41 +119,27 @@ const Chat: React.FC = () => {
 
       <div className="bg-white border-t border-slate-200 p-6 shadow-2xl z-20">
         <div className="max-w-4xl mx-auto">
-            {messages.length < 3 && !isLoading && (
-              <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up">
-                {SUGGESTIONS.map((s, i) => (
-                  <button 
-                    key={i} onClick={() => handleSend(s)}
-                    className="text-[10px] font-black bg-slate-50 text-slate-500 px-4 py-2 rounded-xl border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm uppercase tracking-tighter"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-            
             <div className="relative">
                 <input 
                     value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                     disabled={isLoading}
-                    placeholder="Escribe tu consulta oficial (Línea Base v3.7.1)..."
+                    placeholder="Escribe tu consulta oficial (v3.7.2)..."
                     className="w-full bg-slate-100 border-none rounded-2xl px-6 py-5 pr-16 focus:ring-4 focus:ring-blue-600/10 focus:bg-white transition-all text-sm font-medium"
                 />
                 <button 
                   onClick={() => handleSend()} 
                   disabled={isLoading || !input.trim()}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 disabled:opacity-30 shadow-lg transition-all active:scale-95"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 shadow-lg transition-all active:scale-95"
                 >
                     <Send size={20} />
                 </button>
             </div>
-            
             <div className="flex justify-between items-center px-2 mt-4 opacity-40">
               <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <ShieldCheck size={10} /> Canal Plai Estable | {currentChatId || 'Root Session'}
+                <ShieldCheck size={10} /> Canal Plai | {currentChatId || 'Root'}
               </span>
-              <span className="text-[9px] font-black uppercase tracking-widest">Nara v3.7.1 Handover Edition</span>
+              <span className="text-[9px] font-black uppercase tracking-widest">Nara v3.7.2 Handover</span>
             </div>
         </div>
       </div>
