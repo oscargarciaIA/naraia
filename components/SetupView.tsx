@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, Terminal, Activity, Zap, Database, RefreshCcw, Key, Globe, Eye, EyeOff, Save, CheckCircle, List, Trash2, Wifi, WifiOff, Settings, Link, ChevronDown, ChevronUp, Copy, FileText, Server, HardDrive, Cpu, Printer
+  ShieldCheck, Terminal, Activity, Zap, Database, RefreshCcw, Key, Globe, Eye, EyeOff, Save, CheckCircle, List, Trash2, Wifi, WifiOff, Settings, Link, ChevronDown, ChevronUp, Copy, FileText, Server, HardDrive, Cpu, Printer, AlertTriangle, CheckSquare
 } from 'lucide-react';
 import { checkPlaiConnectivity, addLog, DEFAULT_PLAI_URL } from '../services/geminiService';
 import TechnicalDocument from './TechnicalDocument';
@@ -40,7 +40,7 @@ const SetupView: React.FC = () => {
     localStorage.setItem('NARA_API_KEY', apiKey);
     setSaveStatus(true);
     
-    addLog('info', 'Guardando configuración maestra v3.6.0 e iniciando validación Plai...');
+    addLog('info', 'Guardando configuración oficial v3.7.1 para Handover...');
     
     setPlaiStatus('checking');
     const result = await checkPlaiConnectivity(apiUrl, { agentId, apiKey });
@@ -55,16 +55,22 @@ const SetupView: React.FC = () => {
     setLogs([]);
   };
 
-  const masterScript = {
-    name: "Nara_Master_v3.6.0.ps1",
-    code: `# Nara_Master_v3.6.0.ps1 (Production Stable)
-Write-Host "--- NARA DEPLOYMENT v3.6.0 [STABLE RELEASE] ---" -ForegroundColor Cyan -BackgroundColor Black
+  const masterDeploymentScript = {
+    name: "Nara_Master_v3.7.1.ps1",
+    code: `# Nara_Master_v3.7.1.ps1 (Production Handover Stable)
+Write-Host "--- NARA DEPLOYMENT v3.7.1 [HANDOVER STABLE] ---" -ForegroundColor Cyan -BackgroundColor Black
 
-# 1. CLEANUP PREVIOUS SESSIONS
-Get-Process | Where-Object { $_.ProcessName -match "node|vite" } | Stop-Process -Force -ErrorAction SilentlyContinue
+# 1. AMBIENTE DE VARIABLES (SECRETOS)
+$ENV_AGENT_ID = "${agentId}"
+$ENV_API_KEY  = "${apiKey}"
+$ENV_PLAI_URL = "${apiUrl}"
 
-# 2. ORCHESTRATION CONFIG
-$composeFile = @"
+# 2. LIMPIEZA DE CONTENEDORES PREVIOS
+Write-Host "[1/4] Purgando instancias obsoletas..." -ForegroundColor Yellow
+docker-compose down --volumes --remove-orphans
+
+# 3. GENERACIÓN DINÁMICA DE DOCKER-COMPOSE
+$composeContent = @"
 services:
   nara-vector-db:
     image: pgvector/pgvector:pg16
@@ -80,18 +86,28 @@ services:
     build: .
     container_name: nara_frontend
     environment:
-      - PLAI_URL=${apiUrl}
-      - AGENT_ID=${agentId}
-      - API_KEY=${apiKey}
+      - PLAI_URL=$ENV_PLAI_URL
+      - AGENT_ID=$ENV_AGENT_ID
+      - API_KEY=$ENV_API_KEY
     ports:
       - '3000:3000'
     depends_on:
       - nara-vector-db
 "@
-[System.IO.File]::WriteAllLines("$(Get-Location)/docker-compose.yml", $composeFile)
+[System.IO.File]::WriteAllLines("$(Get-Location)/docker-compose.yml", $composeContent)
 
-docker-compose down; docker-compose up -d --build
-Write-Host "PUNTO DE CONTROL v3.6.0 ONLINE: http://localhost:3000" -ForegroundColor Green`
+# 4. LANZAMIENTO Y VALIDACIÓN
+Write-Host "[2/4] Iniciando orquestación de servicios..." -ForegroundColor Yellow
+docker-compose up -d --build
+
+Write-Host "[3/4] Validando Healthcheck..." -ForegroundColor Yellow
+Start-Sleep -Seconds 10
+$Health = Invoke-WebRequest -Uri "http://localhost:3000" -UseBasicParsing
+if ($Health.StatusCode -eq 200) {
+    Write-Host "[SUCCESS] PUNTO DE CONTROL v3.7.1 ONLINE EN PUERTO 3000" -ForegroundColor Green
+} else {
+    Write-Host "[ERROR] Falla en el despliegue. Revise logs de Docker." -ForegroundColor Red
+}`
   };
 
   return (
@@ -102,22 +118,22 @@ Write-Host "PUNTO DE CONTROL v3.6.0 ONLINE: http://localhost:3000" -ForegroundCo
         <div className="flex items-center justify-between">
            <div>
              <h2 className="text-2xl font-black text-white flex items-center gap-3">
-               <ShieldCheck className="text-blue-500" /> PUNTO DE CONTROL V3.6.0
+               <ShieldCheck className="text-blue-500" /> PUNTO DE CONTROL V3.7.1
              </h2>
-             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Línea Base Estable | Motor Plai Cencosud AI</p>
+             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Línea Base Maestra | Edición de Traspaso</p>
            </div>
            <div className="flex bg-slate-900 p-1 rounded-2xl border border-slate-800">
              <button 
                onClick={() => setViewMode('config')}
                className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${viewMode === 'config' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
              >
-               CONFIGURACIÓN
+               GESTIÓN
              </button>
              <button 
                onClick={() => setViewMode('dossier')}
                className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${viewMode === 'dossier' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
              >
-               DOSSIER MAESTRO
+               BLUEPRINT MAESTRO
              </button>
            </div>
         </div>
@@ -129,58 +145,49 @@ Write-Host "PUNTO DE CONTROL v3.6.0 ONLINE: http://localhost:3000" -ForegroundCo
                  onClick={() => window.print()} 
                  className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all"
                >
-                 <Printer size={16}/> EXPORTAR REPORTE (PDF)
+                 <Printer size={16}/> GENERAR ACTA DE TRASPASO (PDF)
                </button>
             </div>
             <TechnicalDocument />
           </div>
         ) : (
           <>
-            {/* Status Monitor Section */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className={`p-6 rounded-3xl border ${plaiStatus === 'online' ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'} flex items-center justify-between transition-all shadow-lg`}>
-                 <div className="flex items-center gap-3">
-                   {plaiStatus === 'online' ? <Wifi className="text-green-500" /> : <WifiOff className="text-red-500" />}
-                   <div>
-                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Estado Plai</p>
-                     <p className={`text-sm font-bold ${plaiStatus === 'online' ? 'text-green-500' : 'text-red-500'}`}>{plaiStatus.toUpperCase()}</p>
-                   </div>
+            {/* Handover Checklist Section */}
+            <div className="bg-indigo-600/10 border border-indigo-500/20 p-8 rounded-3xl shadow-xl flex flex-col md:flex-row gap-8 items-center">
+               <div className="bg-indigo-600 p-4 rounded-2xl text-white">
+                 <CheckSquare size={32} />
+               </div>
+               <div className="flex-1">
+                 <h3 className="text-white font-bold text-lg">Checklist de Toma de Control v3.7.1</h3>
+                 <p className="text-slate-400 text-xs mt-1">Siga el procedimiento certificado antes del cierre del ticket de traspaso.</p>
+               </div>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
+                 <div className="bg-black/40 p-3 rounded-xl border border-slate-800 text-center">
+                    <p className="text-[9px] font-black text-slate-500 uppercase mb-1">VPN TI</p>
+                    <div className="w-2 h-2 rounded-full bg-green-500 mx-auto"></div>
                  </div>
-                 <button onClick={runChecks} className={`p-2 hover:bg-white/5 rounded-xl text-slate-400 ${plaiStatus === 'checking' ? 'animate-spin' : ''}`}><RefreshCcw size={16}/></button>
-              </div>
-              
-              <div className="p-6 rounded-3xl border bg-blue-500/10 border-blue-500/20 flex items-center gap-3 shadow-lg">
-                 <Database className="text-blue-500" />
-                 <div>
-                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nodo Vectorial</p>
-                   <p className="text-sm font-bold text-blue-500">PGVector Active</p>
+                 <div className="bg-black/40 p-3 rounded-xl border border-slate-800 text-center">
+                    <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Auth Plai</p>
+                    <div className="w-2 h-2 rounded-full bg-green-500 mx-auto"></div>
                  </div>
-              </div>
-
-              <div className="p-6 rounded-3xl border bg-indigo-500/10 border-indigo-500/20 flex items-center gap-3 shadow-lg">
-                 <ShieldCheck className="text-indigo-500" />
-                 <div>
-                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Baseline</p>
-                   <p className="text-sm font-bold text-indigo-400">Punto Control v3.6.0</p>
+                 <div className="bg-black/40 p-3 rounded-xl border border-slate-800 text-center">
+                    <p className="text-[9px] font-black text-slate-500 uppercase mb-1">PGVector</p>
+                    <div className="w-2 h-2 rounded-full bg-green-500 mx-auto"></div>
                  </div>
-              </div>
-
-              <div className="p-6 rounded-3xl border bg-amber-500/10 border-amber-500/20 flex items-center gap-3 shadow-lg">
-                 <Server className="text-amber-500" />
-                 <div>
-                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Control Script</p>
-                   <p className="text-sm font-bold text-amber-500">VERSION 3.6.0</p>
+                 <div className="bg-black/40 p-3 rounded-xl border border-slate-800 text-center">
+                    <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Script 3.7.1</p>
+                    <div className="w-2 h-2 rounded-full bg-blue-500 mx-auto animate-pulse"></div>
                  </div>
-              </div>
+               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Parámetros de Configuración */}
               <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-xl space-y-6">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2"><Settings size={20} className="text-blue-400"/> Configuración de Inferencia Plai</h3>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2"><Settings size={20} className="text-blue-400"/> Parámetros de Inferencia</h3>
                 <div className="space-y-4">
                    <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-1"><Link size={10}/> URL Endpoint Maestro</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-1"><Link size={10}/> Endpoint Corporativo Plai</label>
                       <input 
                         type="text" 
                         value={apiUrl} 
@@ -203,23 +210,23 @@ Write-Host "PUNTO DE CONTROL v3.6.0 ONLINE: http://localhost:3000" -ForegroundCo
                    </div>
                    <button onClick={handleSaveAndTest} disabled={plaiStatus === 'checking'} className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95">
                       {saveStatus ? <RefreshCcw className="animate-spin" size={18}/> : <Save size={18}/>} 
-                      VINCULAR LÍNEA BASE V3.6.0
+                      ACTUALIZAR baseline V3.7.1
                    </button>
                 </div>
               </div>
 
-              {/* Terminal Plai 3.6.0 */}
+              {/* Terminal de Auditoría v3.7.1 */}
               <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col shadow-xl min-h-[400px]">
                 <div className="p-4 bg-slate-800/50 flex justify-between items-center border-b border-slate-800">
                    <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest">
-                     <Terminal size={14} className="text-green-400" /> Plai Debug Terminal v3.6.0
+                     <Terminal size={14} className="text-green-400" /> Plai Debug Terminal v3.7.1
                    </div>
                    <button onClick={clearLogs} className="text-slate-500 hover:text-red-400 transition-colors text-[10px] font-bold flex items-center gap-1">
-                     <Trash2 size={12}/> LIMPIAR AUDITORÍA
+                     <Trash2 size={12}/> LIMPIAR HISTORIAL
                    </button>
                 </div>
                 <div className="flex-1 p-4 font-mono text-[10px] space-y-4 overflow-y-auto bg-black/40 scrollbar-thin">
-                   {logs.length === 0 && <p className="text-slate-600 italic">Esperando tráfico Plai Core...</p>}
+                   {logs.length === 0 && <p className="text-slate-600 italic">Esperando tráfico para auditoría...</p>}
                    {logs.map((log, idx) => (
                      <div key={log.id} className="border-l-2 border-slate-800 pl-4 py-1 animate-fade-in-up">
                         <div className="flex gap-2 items-center mb-1">
@@ -229,20 +236,13 @@ Write-Host "PUNTO DE CONTROL v3.6.0 ONLINE: http://localhost:3000" -ForegroundCo
                           </span>
                         </div>
                         <p className="text-slate-200 font-semibold leading-relaxed">{log.message}</p>
-                        {(expandedLog === idx || log.type === 'error') && log.data && (
-                          <div className="mt-3 relative group">
-                            <pre className="text-[9px] text-indigo-300 bg-black/60 p-4 rounded-xl border border-slate-800 overflow-x-auto whitespace-pre-wrap max-h-72 font-mono scrollbar-thin">
-                              {log.data}
-                            </pre>
-                          </div>
-                        )}
                      </div>
                    ))}
                 </div>
               </div>
             </div>
 
-            {/* Script Maestro v3.6.0 */}
+            {/* Script Maestro de Implementación v3.7.1 */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                <div className="p-5 border-b border-slate-800 bg-slate-800/20 flex justify-between items-center">
                   <div className="flex items-center gap-3">
@@ -250,20 +250,20 @@ Write-Host "PUNTO DE CONTROL v3.6.0 ONLINE: http://localhost:3000" -ForegroundCo
                       <Terminal size={18} className="text-blue-400"/>
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white tracking-tight">Master Deployment Script v3.6.0</h4>
-                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Script Certificado para Producción</p>
+                      <h4 className="text-sm font-bold text-white tracking-tight">Deployment Master v3.7.1 [HANDOVER]</h4>
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Script Certificado para Implementación en Caliente</p>
                     </div>
                   </div>
                   <button 
-                    onClick={() => { navigator.clipboard.writeText(masterScript.code); addLog('info', 'Script Maestro v3.6.0 copiado.'); }} 
+                    onClick={() => { navigator.clipboard.writeText(masterDeploymentScript.code); addLog('info', 'Script Maestro v3.7.1 copiado al portapapeles.'); }} 
                     className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-[10px] font-black text-white rounded-xl transition-all shadow-lg flex items-center gap-2 active:scale-95"
                   >
-                    <Copy size={14}/> COPIAR SCRIPT V3.6.0
+                    <Copy size={14}/> COPIAR SCRIPT MAESTRO
                   </button>
                </div>
                <div className="relative">
                   <pre className="p-8 text-[11px] text-slate-400 bg-black/60 overflow-x-auto leading-relaxed font-mono">
-                    {masterScript.code}
+                    {masterDeploymentScript.code}
                   </pre>
                </div>
             </div>

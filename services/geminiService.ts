@@ -1,13 +1,19 @@
 
 import { NaraResponse } from '../types';
 
-// Valor por defecto corporativo
+/**
+ * Endpoint oficial del motor corporativo Plai.
+ * Se recomienda no modificar a menos que exista un cambio de versión mayor en la API central.
+ */
 export const DEFAULT_PLAI_URL = 'https://plai-api-core.cencosud.ai/api/assistant'; 
 
+/**
+ * Sistema de auditoría local. 
+ * Almacena logs en localStorage para diagnóstico rápido sin persistencia en servidor externo.
+ */
 export const addLog = (type: 'info' | 'error' | 'network', message: string, data?: any) => {
   const logs = JSON.parse(localStorage.getItem('NARA_LOGS') || '[]');
   
-  // Procesar data para que sea legible en la terminal
   let processedData = data;
   if (data && typeof data === 'object') {
     try {
@@ -29,14 +35,18 @@ export const addLog = (type: 'info' | 'error' | 'network', message: string, data
   window.dispatchEvent(new Event('nara_log_update'));
 };
 
+/**
+ * Valida la conectividad con el motor Plai.
+ * Realiza una petición OPTIONS o POST (test) para confirmar el estado del canal.
+ * @param customUrl URL opcional para pruebas de entorno.
+ * @param credentials Objetos de autenticación (ID y Key).
+ */
 export const checkPlaiConnectivity = async (customUrl?: string, credentials?: {agentId: string, apiKey: string}): Promise<{ok: boolean, msg: string, details?: string}> => {
   const url = customUrl || localStorage.getItem('NARA_PLAI_URL') || DEFAULT_PLAI_URL;
-  addLog('network', `Probando conexión con el endpoint: ${url}`);
+  addLog('network', `Verificando enlace con Plai Core: ${url}`);
   
   try {
     const start = Date.now();
-    
-    // Si tenemos credenciales, hacemos un POST real de validación
     const options: RequestInit = credentials ? {
       method: 'POST',
       headers: {
@@ -49,20 +59,13 @@ export const checkPlaiConnectivity = async (customUrl?: string, credentials?: {a
 
     const response = await fetch(url, options);
     const duration = Date.now() - start;
-    
-    let responseBody = "";
-    try {
-      responseBody = await response.text();
-    } catch (e) {
-      responseBody = "No se pudo leer el contenido de la respuesta del servidor.";
-    }
-
-    const statusMsg = `HTTP ${response.status} ${response.statusText} (${duration}ms)`;
+    const responseBody = await response.text();
+    const statusMsg = `HTTP ${response.status} (${duration}ms)`;
     
     if (response.ok) {
-      addLog('info', `Conexión exitosa: ${statusMsg}`, responseBody);
+      addLog('info', `Canal validado: ${statusMsg}`, responseBody);
     } else {
-      addLog('error', `El servidor respondió con error: ${statusMsg}`, responseBody);
+      addLog('error', `Error de canal Plai: ${statusMsg}`, responseBody);
     }
     
     return { 
@@ -71,27 +74,31 @@ export const checkPlaiConnectivity = async (customUrl?: string, credentials?: {a
       details: responseBody
     };
   } catch (e: any) {
-    const errorDetail = `Error de Red Crítico: ${e.message}. Esto suele ocurrir por bloqueos de CORS, VPN no activa o URL incorrecta.`;
-    addLog('error', 'Fallo en la petición (Failed to fetch)', errorDetail);
-    return { ok: false, msg: "Failed to fetch", details: errorDetail };
+    const errorDetail = `Falla de Red/CORS: ${e.message}. Verifique VPN y reglas de Firewall corporativo.`;
+    addLog('error', 'Falla de comunicación crítica', errorDetail);
+    return { ok: false, msg: "Connection Failed", details: errorDetail };
   }
 };
 
+/**
+ * Orquestador principal de mensajes entre el usuario y Plai.
+ * Implementa el protocolo RAG pasando el historial y activando Grounding.
+ */
 export const sendMessageToNara = async (
   input: string,
   history: { role: string; content: string }[],
   chatId?: string
 ): Promise<NaraResponse> => {
-  const agentId = localStorage.getItem('NARA_AGENT_ID') || process.env.AGENT_ID;
-  const apiKey = localStorage.getItem('NARA_API_KEY') || process.env.API_KEY;
-  const apiUrl = localStorage.getItem('NARA_PLAI_URL') || process.env.PLAI_URL || DEFAULT_PLAI_URL;
+  const agentId = localStorage.getItem('NARA_AGENT_ID');
+  const apiKey = localStorage.getItem('NARA_API_KEY');
+  const apiUrl = localStorage.getItem('NARA_PLAI_URL') || DEFAULT_PLAI_URL;
 
   if (!agentId || !apiKey) {
-    addLog('error', 'No se puede enviar el mensaje: Faltan credenciales configuradas.');
+    addLog('error', 'Intento de envío sin credenciales válidas.');
     throw new Error("API_KEY_MISSING");
   }
 
-  addLog('network', `Enviando consulta a Plai: ${apiUrl}`, { agentId, chatId });
+  addLog('network', `Petición saliente Plai [ID: ${agentId.substring(0,5)}...]`);
 
   try {
     const response = await fetch(apiUrl, {
@@ -101,22 +108,18 @@ export const sendMessageToNara = async (
         'x-agent-id': agentId,
         'x-api-key': apiKey
       },
-      body: JSON.stringify({
-        input: input,
-        chatId: chatId,
-        useGrounding: true
-      })
+      body: JSON.stringify({ input, chatId, useGrounding: true })
     });
 
     const responseText = await response.text();
 
     if (!response.ok) {
-      addLog('error', `Error en la API de Plai (${response.status})`, responseText);
-      throw new Error(`Plai Error: ${response.status}`);
+      addLog('error', `Respuesta no autorizada del motor Plai (${response.status})`, responseText);
+      throw new Error(`Plai Auth/Endpoint Error: ${response.status}`);
     }
 
     const data = JSON.parse(responseText);
-    addLog('info', `Respuesta recibida del motor Plai`, data);
+    addLog('info', `Transacción completada exitosamente`, { chatId: data.chatId });
 
     return {
       respuesta_usuario: data.response,
@@ -126,16 +129,16 @@ export const sendMessageToNara = async (
       nivel_confianza: data.contextWasUsed ? 1.0 : 0.85,
       fuentes: (data.groundingMetadata || []).map((g: any) => ({
         doc_id: g.uri || Math.random().toString(),
-        titulo: g.title || g.domain || "Fuente Corporativa",
-        seccion_o_clausula: "Validado por RAG",
+        titulo: g.title || g.domain || "Documento Corporativo",
+        seccion_o_clausula: "Validación Semántica",
         score: 1.0
       })),
-      nota_compliance: `Validado por Motor Plai Cencosud AI. Sesión: ${data.chatId || 'N/A'}`,
+      nota_compliance: `Certificado por Plai Engine v3.7. Sesión: ${data.chatId || 'ROOT'}`,
       escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null }
     } as NaraResponse;
 
   } catch (error: any) {
-    addLog('error', 'Error de comunicación durante la sesión', error.message);
+    addLog('error', 'Falla en el ciclo de mensaje', error.message);
     throw error;
   }
 };

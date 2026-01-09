@@ -1,16 +1,21 @@
 
-# Nara - IT Virtual Management System (Punto de Control v3.6.0)
+# Nara IT Management System - Guía de Toma de Control (v3.7.0)
 
-Este es el **Punto de Control Maestro v3.6.0**. Representa la versión estable certificada para despliegue productivo y entrega oficial al área de infraestructura.
+Este documento certifica la entrega técnica del asistente virtual Nara.
 
-## Arquitectura de Referencia
-- **Motor de IA**: Plai Core Neural Engine (Cencosud AI).
-- **Protocolo de Seguridad**: Autenticación por Headers dinámicos (`x-agent-id`, `x-api-key`).
-- **Persistencia Vectorial**: PGVector v16 sobre PostgreSQL.
-- **Frontend**: React 19 + Tailwind CSS (High-End Enterprise UI).
+## 1. Quick Start para Administradores
+1.  **Validación de Red**: Asegurar acceso a `https://plai-api-core.cencosud.ai`.
+2.  **Configuración de Bóveda**: Inyectar `AGENT_ID` y `API_KEY` en el entorno.
+3.  **Despliegue**: Ejecutar `Nara_Master_v3.7.0.ps1` en PowerShell con permisos de administrador.
 
-## Notas de Autenticación
-Esta versión implementa el protocolo de enlace estricto con el endpoint central de Plai. Cualquier error de autenticación debe ser validado contra la política de CORS y la vigencia de los tokens en la bóveda de seguridad corporativa.
+## 2. Puntos Críticos de Control
+- **Autenticación**: Protocolo basado en Custom Headers (Plai Standard).
+- **Base de Datos**: PGVector para almacenamiento de embeddings semánticos.
+- **Seguridad**: Los tokens nunca deben persistirse en texto plano en el código fuente.
+
+## 3. Contacto y Soporte
+- **Área**: Cencosud AI / Arquitectura TI.
+- **Versión**: 3.7.0 Stable Handover.
 
 ---
-*Área de TI - Multinacional - Rama de Producción v3.6.0 - 2024*
+*Certificado de Traspaso Técnico v3.7.0 - 2024*

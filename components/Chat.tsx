@@ -18,9 +18,9 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{
       id: 'welcome', role: 'assistant', timestamp: new Date(),
       content: { 
-        respuesta_usuario: "Bienvenido al Punto de Control v3.6.0 de Nara. Sistema sincronizado con el motor corporativo Plai (Cencosud AI). Estoy lista para asistirte con la documentación oficial de TI. ¿Cuál es tu consulta?", 
+        respuesta_usuario: "Bienvenido al Punto de Control v3.7.1 de Nara. Sistema sincronizado con el motor corporativo Plai (Cencosud AI). Estoy lista para asistirte con la documentación oficial de TI. ¿Cuál es tu consulta?", 
         fuentes: [],
-        nota_compliance: "Sesión certificada bajo la línea base estable v3.6.0 de Plai.",
+        nota_compliance: "Sesión certificada bajo la línea base de producción v3.7.1 de Plai.",
         accion: "responder",
         nivel_confianza: 1,
         escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null },
@@ -74,7 +74,7 @@ const Chat: React.FC = () => {
       if (err.message === "API_KEY_MISSING") {
         setError({
           title: "Credenciales Plai Requeridas",
-          msg: "El Punto de Control 3.6.0 requiere llaves activas. Verifícalas en el Panel de Control."
+          msg: "El Punto de Control 3.7.1 requiere llaves activas. Verifícalas en el Panel de Control."
         });
       } else {
         setError({
@@ -98,7 +98,7 @@ const Chat: React.FC = () => {
                 <div className="bg-blue-100 p-2 rounded-lg">
                    <ShieldCheck size={18} />
                 </div>
-                <span className="text-xs font-black uppercase tracking-widest">Nara v3.6.0 procesando consulta...</span>
+                <span className="text-xs font-black uppercase tracking-widest">Nara v3.7.1 procesando consulta...</span>
               </div>
             )}
 
@@ -140,7 +140,7 @@ const Chat: React.FC = () => {
                     value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                     disabled={isLoading}
-                    placeholder="Escribe tu consulta oficial (Línea Base v3.6.0)..."
+                    placeholder="Escribe tu consulta oficial (Línea Base v3.7.1)..."
                     className="w-full bg-slate-100 border-none rounded-2xl px-6 py-5 pr-16 focus:ring-4 focus:ring-blue-600/10 focus:bg-white transition-all text-sm font-medium"
                 />
                 <button 
@@ -156,7 +156,7 @@ const Chat: React.FC = () => {
               <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
                 <ShieldCheck size={10} /> Canal Plai Estable | {currentChatId || 'Root Session'}
               </span>
-              <span className="text-[9px] font-black uppercase tracking-widest">Nara Stable Release v3.6.0</span>
+              <span className="text-[9px] font-black uppercase tracking-widest">Nara v3.7.1 Handover Edition</span>
             </div>
         </div>
       </div>
