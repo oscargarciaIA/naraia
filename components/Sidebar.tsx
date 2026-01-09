@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Database, Activity, Server, Settings, BookOpen } from 'lucide-react';
+import { Shield, Database, Activity, Server, Settings, BookOpen, RefreshCw } from 'lucide-react';
 import { AgentConfig } from '../types';
 
 interface SidebarProps { 
@@ -11,17 +11,19 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveView }) => {
   const [vectorCount, setVectorCount] = useState(0);
+  const [dbStatus, setDbStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
-    const updateCount = () => {
+    const updateStats = () => {
       const dynamicStored = localStorage.getItem('NARA_DYNAMIC_KNOWLEDGE');
       const knowledge = dynamicStored ? JSON.parse(dynamicStored) : [];
       setVectorCount(knowledge.length);
+      setDbStatus(knowledge ? 'online' : 'offline');
     };
 
-    updateCount();
-    window.addEventListener('storage', updateCount);
-    return () => window.removeEventListener('storage', updateCount);
+    updateStats();
+    window.addEventListener('storage', updateStats);
+    return () => window.removeEventListener('storage', updateStats);
   }, []);
 
   return (
@@ -33,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
           </div>
           <div>
             <h2 className="text-lg font-bold text-white tracking-tight">Nara System</h2>
-            <p className="text-[10px] text-indigo-400 font-mono uppercase font-bold tracking-widest">Baseline v3.0.0</p>
+            <p className="text-[10px] text-indigo-400 font-mono uppercase font-bold tracking-widest">Cencosud v3.1.0</p>
           </div>
         </div>
 
@@ -74,9 +76,11 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
                   </div>
                   <span className="text-[10px] font-mono text-blue-400 font-bold">{vectorCount}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                   <span className="text-[9px] font-mono text-slate-500 uppercase">Synced & Online</span>
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${dbStatus === 'online' ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500 shadow-[0_0_5px_#ef4444]'}`}></div>
+                      <span className="text-[9px] font-mono text-slate-500 uppercase">{dbStatus === 'online' ? 'Online' : 'Offline'}</span>
+                   </div>
                 </div>
               </div>
             </div>
@@ -88,7 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase tracking-tighter">Admin</div>
           <div>
-            <div className="text-xs font-bold text-white">TI Global Support</div>
+            <div className="text-xs font-bold text-white">Cencosud TI</div>
             <div className="text-[9px] text-slate-500 uppercase tracking-widest">Master Node v3</div>
           </div>
         </div>

@@ -9,10 +9,11 @@ export const sendMessageToNara = async (
   history: { role: string; content: string }[],
   chatId?: string
 ): Promise<NaraResponse> => {
-  const agentId = process.env.AGENT_ID;
-  const apiKey = process.env.API_KEY;
+  // Intentar obtener de localStorage primero, luego de process.env
+  const agentId = localStorage.getItem('NARA_AGENT_ID') || process.env.AGENT_ID;
+  const apiKey = localStorage.getItem('NARA_API_KEY') || process.env.API_KEY;
 
-  if (!agentId || !apiKey || agentId === "undefined" || apiKey === "undefined") {
+  if (!agentId || !apiKey || agentId === "undefined" || apiKey === "undefined" || agentId === "" || apiKey === "") {
     throw new Error("API_KEY_MISSING");
   }
 
@@ -26,7 +27,7 @@ export const sendMessageToNara = async (
       },
       body: JSON.stringify({
         input: input,
-        chatId: chatId, // Se envía si existe para mantener el hilo de la conversación
+        chatId: chatId,
         useGrounding: true
       })
     });
@@ -38,7 +39,6 @@ export const sendMessageToNara = async (
 
     const data = await response.json();
 
-    // Mapeo de la respuesta del motor corporativo al esquema visual de Nara
     return {
       respuesta_usuario: data.response,
       chatId: data.chatId,
