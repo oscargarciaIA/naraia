@@ -18,9 +18,9 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{
       id: 'welcome', role: 'assistant', timestamp: new Date(),
       content: { 
-        respuesta_usuario: "Bienvenido al Punto de Control v3.5 de Nara. Sistema sincronizado con el motor corporativo Plai. Estoy lista para asistirte con la documentación oficial de TI y soporte técnico de nivel 1. ¿Cuál es tu consulta?", 
+        respuesta_usuario: "Bienvenido al Punto de Control v3.6.0 de Nara. Sistema sincronizado con el motor corporativo Plai (Cencosud AI). Estoy lista para asistirte con la documentación oficial de TI. ¿Cuál es tu consulta?", 
         fuentes: [],
-        nota_compliance: "Sesión certificada bajo el motor de inteligencia Plai Cencosud AI.",
+        nota_compliance: "Sesión certificada bajo la línea base estable v3.6.0 de Plai.",
         accion: "responder",
         nivel_confianza: 1,
         escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null },
@@ -73,13 +73,13 @@ const Chat: React.FC = () => {
       console.error(err);
       if (err.message === "API_KEY_MISSING") {
         setError({
-          title: "Credenciales de Plai Faltantes",
-          msg: "El sistema no detectó las llaves de acceso en el Punto de Control. Configúralas en el panel maestro."
+          title: "Credenciales Plai Requeridas",
+          msg: "El Punto de Control 3.6.0 requiere llaves activas. Verifícalas en el Panel de Control."
         });
       } else {
         setError({
-          title: "Error de Motor Plai",
-          msg: `Falla de comunicación con el servicio central: ${err.message}.`
+          title: "Error de Inferencia Plai",
+          msg: `Falla de red o autenticación: ${err.message}. Verifica los headers de autorización.`
         });
       }
     } finally {
@@ -98,7 +98,7 @@ const Chat: React.FC = () => {
                 <div className="bg-blue-100 p-2 rounded-lg">
                    <ShieldCheck size={18} />
                 </div>
-                <span className="text-xs font-black uppercase tracking-widest">Nara procesando con motor Plai...</span>
+                <span className="text-xs font-black uppercase tracking-widest">Nara v3.6.0 procesando consulta...</span>
               </div>
             )}
 
@@ -127,7 +127,7 @@ const Chat: React.FC = () => {
                 {SUGGESTIONS.map((s, i) => (
                   <button 
                     key={i} onClick={() => handleSend(s)}
-                    className="text-[10px] font-black bg-slate-50 text-slate-500 px-4 py-2 rounded-xl border border-slate-200 hover:border-blue-500 hover:text-blue-600 hover:bg-white transition-all shadow-sm uppercase tracking-tighter"
+                    className="text-[10px] font-black bg-slate-50 text-slate-500 px-4 py-2 rounded-xl border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm uppercase tracking-tighter"
                   >
                     {s}
                   </button>
@@ -140,7 +140,7 @@ const Chat: React.FC = () => {
                     value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                     disabled={isLoading}
-                    placeholder="Escribe tu consulta oficial (Canal Plai Certificado)..."
+                    placeholder="Escribe tu consulta oficial (Línea Base v3.6.0)..."
                     className="w-full bg-slate-100 border-none rounded-2xl px-6 py-5 pr-16 focus:ring-4 focus:ring-blue-600/10 focus:bg-white transition-all text-sm font-medium"
                 />
                 <button 
@@ -154,9 +154,9 @@ const Chat: React.FC = () => {
             
             <div className="flex justify-between items-center px-2 mt-4 opacity-40">
               <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <ShieldCheck size={10} /> Plai Engine Active | {currentChatId || 'Master Session'}
+                <ShieldCheck size={10} /> Canal Plai Estable | {currentChatId || 'Root Session'}
               </span>
-              <span className="text-[9px] font-black uppercase tracking-widest">Nara v3.5 Punto Control</span>
+              <span className="text-[9px] font-black uppercase tracking-widest">Nara Stable Release v3.6.0</span>
             </div>
         </div>
       </div>

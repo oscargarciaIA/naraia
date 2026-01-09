@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Punto de Control Maestro v3.5.1",
-  "description": "Línea Base de Producción Final: Seguridad reforzada, ofuscación de credenciales en dossier y motor Plai nativo.",
-  "version": "3.5.1",
+  "name": "Nara - Punto de Control Maestro v3.6.0",
+  "description": "Línea Base de Producción Final Certificada. Motor Plai nativo, seguridad de grado corporativo y dossier técnico de auditoría.",
+  "version": "3.6.0",
   "requestFramePermissions": []
 }

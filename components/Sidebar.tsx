@@ -35,13 +35,13 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
           </div>
           <div>
             <h2 className="text-xl font-black text-white tracking-tighter">Nara Plai</h2>
-            <p className="text-[10px] text-blue-500 font-mono uppercase font-black tracking-[0.2em]">Punto Control v3.5</p>
+            <p className="text-[10px] text-blue-500 font-mono uppercase font-black tracking-[0.2em]">Punto Control v3.6.0</p>
           </div>
         </div>
 
         <nav className="space-y-8">
           <section>
-            <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-2">Estructura Maestra</h3>
+            <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-2">Línea Base Maestra</h3>
             <div className="space-y-1.5">
               <button 
                 onClick={() => setActiveView('chat')}
@@ -66,19 +66,19 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
 
           <section>
             <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 flex items-center px-2">
-              <Server size={14} className="mr-2"/> Red Plai Cencosud
+              <Server size={14} className="mr-2"/> Infraestructura
             </h3>
             <div className="space-y-3">
               <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-2 text-xs text-slate-300 font-bold">
-                    <Database size={16} className="text-blue-500" /> Nodos Vectoriales
+                    <Database size={16} className="text-blue-500" /> Nodos Plai
                   </div>
                   <span className="text-[11px] font-mono text-blue-400 font-black">{vectorCount}</span>
                 </div>
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-2.5">
-                      <div className={`w-2 h-2 rounded-full animate-pulse bg-green-500 shadow-[0_0_8px_#22c55e]`}></div>
+                      <div className={`w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]`}></div>
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sincronizado</span>
                    </div>
                 </div>
@@ -90,10 +90,10 @@ const Sidebar: React.FC<SidebarProps> = ({ agentConfig, activeView, setActiveVie
 
       <div className="mt-auto p-6 border-t border-slate-900 bg-black/20">
         <div className="flex items-center gap-3 p-2">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-[10px] font-black text-white">V3.5</div>
+          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-[10px] font-black text-white">V3.6</div>
           <div>
             <div className="text-xs font-black text-white uppercase tracking-tighter">Punto Control TI</div>
-            <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">Cencosud AI Master</div>
+            <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">Stable Release v3.6.0</div>
           </div>
         </div>
       </div>
