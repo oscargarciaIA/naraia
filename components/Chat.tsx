@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Sparkles, AlertTriangle, RefreshCw, Key } from 'lucide-react';
+import { Send, Sparkles, AlertTriangle, RefreshCw, Key, ShieldCheck } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import { ChatMessage, NaraResponse } from '../types';
 import { sendMessageToNara } from '../services/geminiService';
 
 const SUGGESTIONS = [
   "¿Cuál es el tiempo de respuesta para un incidente P1?",
-  "¿Dónde puedo ver el inventario de laptops?",
   "¿Cómo configuro el acceso VPN?",
-  "Necesito ayuda humana (Escalamiento)"
+  "¿Dónde está la documentación de Plai?",
+  "Escalar consulta a Mesa de Ayuda"
 ];
 
 const Chat: React.FC = () => {
@@ -18,9 +18,9 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{
       id: 'welcome', role: 'assistant', timestamp: new Date(),
       content: { 
-        respuesta_usuario: "Bienvenido al Canal Oficial de Nara v3.0. Sistema integrado con el motor Plai corporativo. Estoy lista para asistirte con manuales reales y soporte técnico. ¿En qué puedo ayudarte?", 
+        respuesta_usuario: "Bienvenido al Punto de Control v3.5 de Nara. Sistema sincronizado con el motor corporativo Plai. Estoy lista para asistirte con la documentación oficial de TI y soporte técnico de nivel 1. ¿Cuál es tu consulta?", 
         fuentes: [],
-        nota_compliance: "Sesión monitoreada bajo estándares corporativos de seguridad TI.",
+        nota_compliance: "Sesión certificada bajo el motor de inteligencia Plai Cencosud AI.",
         accion: "responder",
         nivel_confianza: 1,
         escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null },
@@ -59,7 +59,6 @@ const Chat: React.FC = () => {
       
       const response = await sendMessageToNara(messageText, history, currentChatId);
       
-      // Actualizar el chatId para mantener el hilo de la conversación
       if (response.chatId) {
         setCurrentChatId(response.chatId);
       }
@@ -74,13 +73,13 @@ const Chat: React.FC = () => {
       console.error(err);
       if (err.message === "API_KEY_MISSING") {
         setError({
-          title: "Credenciales no detectadas",
-          msg: "El sistema no recibió AGENT_ID o API_KEY. Por favor, usa el script v3.0 en Setup para configurar Plai."
+          title: "Credenciales de Plai Faltantes",
+          msg: "El sistema no detectó las llaves de acceso en el Punto de Control. Configúralas en el panel maestro."
         });
       } else {
         setError({
-          title: "Error de Motor Corporativo",
-          msg: `Falla de comunicación con Plai: ${err.message}. Revisa el estado del servicio.`
+          title: "Error de Motor Plai",
+          msg: `Falla de comunicación con el servicio central: ${err.message}.`
         });
       }
     } finally {
@@ -95,11 +94,11 @@ const Chat: React.FC = () => {
             {messages.map(m => <MessageBubble key={m.id} message={m} />)}
             
             {isLoading && (
-              <div className="flex items-center gap-3 text-indigo-500 animate-pulse ml-4">
-                <div className="bg-indigo-100 p-2 rounded-lg">
-                   <Sparkles size={18} />
+              <div className="flex items-center gap-3 text-blue-600 animate-pulse ml-4">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                   <ShieldCheck size={18} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-widest">Nara consultando motor corporativo Plai...</span>
+                <span className="text-xs font-black uppercase tracking-widest">Nara procesando con motor Plai...</span>
               </div>
             )}
 
@@ -128,7 +127,7 @@ const Chat: React.FC = () => {
                 {SUGGESTIONS.map((s, i) => (
                   <button 
                     key={i} onClick={() => handleSend(s)}
-                    className="text-[10px] font-bold bg-slate-50 text-slate-500 px-4 py-2 rounded-xl border border-slate-200 hover:border-indigo-500 hover:text-indigo-600 hover:bg-white transition-all shadow-sm uppercase tracking-tighter"
+                    className="text-[10px] font-black bg-slate-50 text-slate-500 px-4 py-2 rounded-xl border border-slate-200 hover:border-blue-500 hover:text-blue-600 hover:bg-white transition-all shadow-sm uppercase tracking-tighter"
                   >
                     {s}
                   </button>
@@ -141,13 +140,13 @@ const Chat: React.FC = () => {
                     value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                     disabled={isLoading}
-                    placeholder="Escribe tu consulta oficial para TI (Motor Plai)..."
-                    className="w-full bg-slate-100 border-none rounded-2xl px-6 py-5 pr-16 focus:ring-4 focus:ring-indigo-600/10 focus:bg-white transition-all text-sm font-medium"
+                    placeholder="Escribe tu consulta oficial (Canal Plai Certificado)..."
+                    className="w-full bg-slate-100 border-none rounded-2xl px-6 py-5 pr-16 focus:ring-4 focus:ring-blue-600/10 focus:bg-white transition-all text-sm font-medium"
                 />
                 <button 
                   onClick={() => handleSend()} 
                   disabled={isLoading || !input.trim()}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-30 shadow-lg transition-all active:scale-95"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 disabled:opacity-30 shadow-lg transition-all active:scale-95"
                 >
                     <Send size={20} />
                 </button>
@@ -155,9 +154,9 @@ const Chat: React.FC = () => {
             
             <div className="flex justify-between items-center px-2 mt-4 opacity-40">
               <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <Key size={8} /> Plai Engine Active | {currentChatId || 'Nueva Sesión'}
+                <ShieldCheck size={10} /> Plai Engine Active | {currentChatId || 'Master Session'}
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-widest">Nara v3.0 Corporate</span>
+              <span className="text-[9px] font-black uppercase tracking-widest">Nara v3.5 Punto Control</span>
             </div>
         </div>
       </div>

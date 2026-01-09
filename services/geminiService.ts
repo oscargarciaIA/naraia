@@ -31,12 +31,12 @@ export const addLog = (type: 'info' | 'error' | 'network', message: string, data
 
 export const checkPlaiConnectivity = async (customUrl?: string, credentials?: {agentId: string, apiKey: string}): Promise<{ok: boolean, msg: string, details?: string}> => {
   const url = customUrl || localStorage.getItem('NARA_PLAI_URL') || DEFAULT_PLAI_URL;
-  addLog('network', `Iniciando prueba de enlace con: ${url}`);
+  addLog('network', `Probando conexión con el endpoint: ${url}`);
   
   try {
     const start = Date.now();
     
-    // Si tenemos credenciales, intentamos un POST de validación (más real que OPTIONS)
+    // Si tenemos credenciales, hacemos un POST real de validación
     const options: RequestInit = credentials ? {
       method: 'POST',
       headers: {
@@ -44,7 +44,7 @@ export const checkPlaiConnectivity = async (customUrl?: string, credentials?: {a
         'x-agent-id': credentials.agentId,
         'x-api-key': credentials.apiKey
       },
-      body: JSON.stringify({ input: "ping", test: true })
+      body: JSON.stringify({ input: "System Connectivity Test", test: true })
     } : { method: 'OPTIONS' };
 
     const response = await fetch(url, options);
@@ -54,11 +54,16 @@ export const checkPlaiConnectivity = async (customUrl?: string, credentials?: {a
     try {
       responseBody = await response.text();
     } catch (e) {
-      responseBody = "No se pudo leer el cuerpo de la respuesta.";
+      responseBody = "No se pudo leer el contenido de la respuesta del servidor.";
     }
 
-    const statusMsg = `HTTP ${response.status} ${response.statusText} en ${duration}ms`;
-    addLog(response.ok ? 'info' : 'error', `Resultado de conexión: ${statusMsg}`, responseBody);
+    const statusMsg = `HTTP ${response.status} ${response.statusText} (${duration}ms)`;
+    
+    if (response.ok) {
+      addLog('info', `Conexión exitosa: ${statusMsg}`, responseBody);
+    } else {
+      addLog('error', `El servidor respondió con error: ${statusMsg}`, responseBody);
+    }
     
     return { 
       ok: response.ok || response.status === 405, 
@@ -66,8 +71,8 @@ export const checkPlaiConnectivity = async (customUrl?: string, credentials?: {a
       details: responseBody
     };
   } catch (e: any) {
-    const errorDetail = `Posibles causas: CORS, VPN desconectada, o URL errónea. Error: ${e.message}`;
-    addLog('error', 'Fallo crítico de red (Failed to fetch)', errorDetail);
+    const errorDetail = `Error de Red Crítico: ${e.message}. Esto suele ocurrir por bloqueos de CORS, VPN no activa o URL incorrecta.`;
+    addLog('error', 'Fallo en la petición (Failed to fetch)', errorDetail);
     return { ok: false, msg: "Failed to fetch", details: errorDetail };
   }
 };
@@ -82,11 +87,11 @@ export const sendMessageToNara = async (
   const apiUrl = localStorage.getItem('NARA_PLAI_URL') || process.env.PLAI_URL || DEFAULT_PLAI_URL;
 
   if (!agentId || !apiKey) {
-    addLog('error', 'Credenciales faltantes.');
+    addLog('error', 'No se puede enviar el mensaje: Faltan credenciales configuradas.');
     throw new Error("API_KEY_MISSING");
   }
 
-  addLog('network', `POST -> ${apiUrl}`, { agentId, chatId });
+  addLog('network', `Enviando consulta a Plai: ${apiUrl}`, { agentId, chatId });
 
   try {
     const response = await fetch(apiUrl, {
@@ -106,12 +111,12 @@ export const sendMessageToNara = async (
     const responseText = await response.text();
 
     if (!response.ok) {
-      addLog('error', `Error en consulta (${response.status})`, responseText);
+      addLog('error', `Error en la API de Plai (${response.status})`, responseText);
       throw new Error(`Plai Error: ${response.status}`);
     }
 
     const data = JSON.parse(responseText);
-    addLog('info', `Respuesta recibida correctamente`, data);
+    addLog('info', `Respuesta recibida del motor Plai`, data);
 
     return {
       respuesta_usuario: data.response,
@@ -125,12 +130,12 @@ export const sendMessageToNara = async (
         seccion_o_clausula: "Validado por RAG",
         score: 1.0
       })),
-      nota_compliance: `Motor Plai Cencosud. Sesión: ${data.chatId || 'N/A'}`,
+      nota_compliance: `Validado por Motor Plai Cencosud AI. Sesión: ${data.chatId || 'N/A'}`,
       escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null }
     } as NaraResponse;
 
   } catch (error: any) {
-    addLog('error', 'Error en el transporte de datos', error.message);
+    addLog('error', 'Error de comunicación durante la sesión', error.message);
     throw error;
   }
 };

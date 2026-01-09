@@ -1,6 +1,6 @@
 {
-  "name": "Nara - Sistema de Gestión TI v3.0.0",
-  "description": "Línea Base de Producción: Inteligencia Gemini 3 Pro con motor RAG de alta fidelidad.",
-  "version": "3.0.0",
+  "name": "Nara - Punto de Control Maestro v3.5.1",
+  "description": "Línea Base de Producción Final: Seguridad reforzada, ofuscación de credenciales en dossier y motor Plai nativo.",
+  "version": "3.5.1",
   "requestFramePermissions": []
 }

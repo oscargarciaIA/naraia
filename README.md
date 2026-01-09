@@ -1,15 +1,15 @@
 
-# Nara - IT Virtual Management System (v3.0.0 Baseline)
+# Nara - IT Virtual Management System (Punto de Control v3.5)
 
-Este es el **Punto de Partida Maestro v3.0.0**. Representa la arquitectura final consolidada y verificada para el entorno corporativo.
+Este es el **Punto de Control Maestro v3.5**. Representa el estado final y certificado del sistema para la entrega oficial al área de TI.
 
 ## Especificaciones del Sistema
-- **Core Engine**: Gemini 3 Pro (v3.0 Optimized).
-- **Data Engine**: RAG (Retrieval-Augmented Generation) sincronizado con Knowledge Hub.
-- **Infraestructura**: Despliegue mediante contenedores Docker (v16 Vector Engine).
+- **Core Engine**: Plai (Cencosud AI Corporate Engine) - Versión de Producción.
+- **Data Engine**: RAG (Retrieval-Augmented Generation) con persistencia en PGVector.
+- **Infraestructura**: Microservicios orquestados por Docker (Nara Frontend + Vector Engine).
 
 ## Control de Despliegue
-El sistema se despliega utilizando el script `Nara_Control_v3.0.ps1`, el cual garantiza la limpieza de puertos, purga de volúmenes y levantamiento automático de la red de servicios.
+Esta versión utiliza el script `Nara_Master_v3.5.ps1`, configurado para el enlace seguro con los endpoints oficiales de Plai.
 
 ---
-*Área de TI - Multinacional - Rama Principal v3.0 - 2024*
+*Área de TI - Multinacional - Rama de Producción v3.5 - 2024*
