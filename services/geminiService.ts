@@ -1,8 +1,8 @@
 
 import { NaraResponse } from '../types';
 
-// Base URL según documentación corporativa
-const PLAI_API_BASE_URL = 'https://api.plai.ai'; 
+// Endpoint oficial Plai Cencosud
+const PLAI_API_ENDPOINT = 'https://plai-api-core.cencosud.ai/api/assistant'; 
 
 export const sendMessageToNara = async (
   input: string,
@@ -17,7 +17,7 @@ export const sendMessageToNara = async (
   }
 
   try {
-    const response = await fetch(`${PLAI_API_BASE_URL}/assistant`, {
+    const response = await fetch(PLAI_API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,12 +26,8 @@ export const sendMessageToNara = async (
       },
       body: JSON.stringify({
         input: input,
-        chatId: chatId,
-        useGrounding: true,
-        modelParameters: {
-          temperature: 0.2,
-          maxOutputTokens: 1000
-        }
+        chatId: chatId, // Se envía si existe para mantener el hilo de la conversación
+        useGrounding: true
       })
     });
 
@@ -42,7 +38,7 @@ export const sendMessageToNara = async (
 
     const data = await response.json();
 
-    // Mapeo de la respuesta de Plai al formato visual de Nara
+    // Mapeo de la respuesta del motor corporativo al esquema visual de Nara
     return {
       respuesta_usuario: data.response,
       chatId: data.chatId,
@@ -56,12 +52,12 @@ export const sendMessageToNara = async (
         score: 1.0,
         tipo_archivo: 'pdf'
       })),
-      nota_compliance: `Sesión ID: ${data.chatId || 'N/A'}. Información verificada por el motor Plai.`,
+      nota_compliance: `Sesión ID: ${data.chatId || 'N/A'}. Verificado por Plai Cencosud AI Engine.`,
       escalamiento: { metodo: null, ticket_id: null, mail_id: null, resumen: null, severidad: null }
     } as NaraResponse;
 
   } catch (error: any) {
-    console.error("Plai Engine Error:", error);
+    console.error("Plai Corporate Engine Error:", error);
     throw error;
   }
 };
