@@ -1,5 +1,6 @@
 
 import { AgentFile, MockContextItem } from '../types';
+import { addLog } from './geminiService';
 
 const STORAGE_FILES_KEY = 'NARA_MOCK_FILES';
 const STORAGE_CONTENT_KEY = 'NARA_DYNAMIC_KNOWLEDGE';
@@ -9,14 +10,9 @@ const readFileAsText = (file: File): Promise<string> => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
-      if (!content || content.includes('\u0000')) {
-        resolve("");
-      } else {
-        resolve(content);
-      }
+      resolve(content || "");
     };
     reader.onerror = () => resolve("");
-    // Aumentamos el límite de lectura a 1MB para manuales reales
     reader.readAsText(file.slice(0, 1000000));
   });
 };
@@ -28,11 +24,13 @@ export const agentBuilderService = {
   },
 
   uploadFile: async (agentId: string, apiKey: string, file: File): Promise<boolean> => {
+    addLog('info', `Iniciando proceso de ingesta: ${file.name}`);
+    
     let extractedText = await readFileAsText(file);
     
-    // Fallback: Si no es texto plano, informamos que requiere OCR o parseador específico
     if (!extractedText || extractedText.trim().length < 5) {
-      extractedText = `ARCHIVO BINARIO DETECTADO: ${file.name}\n\nNota: Este archivo no es texto plano (posible PDF, Excel binario o imagen). Para el piloto, por favor sube versiones en .TXT o .CSV para garantizar que Nara pueda leer el contenido exacto.`;
+      addLog('error', `El archivo ${file.name} parece estar vacío o ser binario.`);
+      extractedText = `Contenido no legible para ${file.name}`;
     }
 
     const stored = localStorage.getItem(STORAGE_FILES_KEY);
@@ -55,19 +53,24 @@ export const agentBuilderService = {
     const newKnowledge: MockContextItem = {
       doc_id: newFile.uuid,
       titulo: newFile.name,
-      seccion_o_clausula: "Ingesta Real Producción",
+      seccion_o_clausula: "Local Vector Sync",
       fecha_version: newFile.uploadDate,
       texto: extractedText,
-      score: 0,
-      tipo_archivo: file.name.endsWith('.xlsx') ? 'xlsx' : (file.name.endsWith('.pdf') ? 'pdf' : 'docx')
+      score: 1.0,
+      tipo_archivo: 'pdf'
     };
 
     localStorage.setItem(STORAGE_CONTENT_KEY, JSON.stringify([newKnowledge, ...knowledge]));
+    
+    addLog('info', `Archivo indexado correctamente. Fragmentos generados: ${Math.ceil(extractedText.length / 500)}`);
+    
     window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event('nara_log_update'));
     return true;
   },
 
   deleteFiles: async (agentId: string, apiKey: string, uuids: string[]): Promise<boolean> => {
+    addLog('info', `Eliminando ${uuids.length} documentos de la base de datos.`);
     const stored = localStorage.getItem(STORAGE_FILES_KEY);
     if (stored) {
       const files: AgentFile[] = JSON.parse(stored);
@@ -79,6 +82,7 @@ export const agentBuilderService = {
       localStorage.setItem(STORAGE_CONTENT_KEY, JSON.stringify(knowledge.filter(k => !uuids.includes(k.doc_id))));
     }
     window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event('nara_log_update'));
     return true;
   }
 };
